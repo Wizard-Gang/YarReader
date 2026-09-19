@@ -1,5 +1,9 @@
 # Contributing
 
+## Active plan
+
+When `IMPLEMENTATION_PLAN.md` exists, its first open task is the default next repository change unless the owner explicitly overrides it. The plan is current/future-only: remove already-merged task blocks at the start of the next controlled change, update remaining tasks when future scope changes, and do not maintain a completed-task or legacy implementation log.
+
 ## Change flow
 
 ```text
@@ -23,6 +27,12 @@ Every controlled change body records `Change`, `Reason`, `Impact`, `Risk`,
 `Rollback` for persistence, migration, archive, activation, schema, or other
 high-risk changes. A corrective change identifies the earlier change in its
 notes or a `Corrects:` trailer.
+
+Provider-aware GitHub repository settings are verified separately from credential-free `npm run check`:
+
+```sh
+npm run verify:github-settings
+```
 
 Before opening a pull request, run:
 

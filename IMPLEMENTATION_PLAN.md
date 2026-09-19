@@ -4,11 +4,11 @@ Status: **Active**
 
 Scope: streamline YarReader around the published WG-ARCH-001 repository baseline while preserving its defining product boundary: a local crash-recoverable ingestion/archive CLI that emits a self-contained offline reader which works from `file://`.
 
-This file is the active planning source of truth for YR-041 through YR-051. Executable source, `ARCHITECTURE.md`, current policy documents, and released interfaces remain authoritative for shipped behavior. This plan may reserve future controlled change IDs for sequencing; permanent current-state documentation should not narrate those future IDs. YR-051 retires this plan after the durable rules have moved into their permanent authorities.
+This file is the active planning source of truth for YR-042 through YR-052. Executable source, `ARCHITECTURE.md`, current policy documents, and released interfaces remain authoritative for shipped behavior. This plan contains only current and future work. Merged task blocks are removed instead of being retained as a completed-task ledger. YR-052 retires this plan after the durable rules have moved into their permanent authorities.
 
 ## Context
 
-Measured on 2026-09-19 from `main` `7735f73` after YR-040:
+Current-state observations:
 
 | Area | Current state |
 |---|---|
@@ -24,6 +24,14 @@ Measured on 2026-09-19 from `main` `7735f73` after YR-040:
 | GitHub merge policy | classic `main` protection exists and requires `verify` and `change-id`; repository rulesets are absent |
 | Merge methods | merge commits disabled; squash and rebase enabled; merged branches are deleted |
 | Automation drift | Dependabot PR #6 is open without a controlled YR identity even though version-update PR automation is not part of the current controlled process |
+
+## Plan maintenance
+
+- Reconcile this file with current `main` before beginning work and remove task blocks already merged.
+- Work the first remaining open task before unrelated repository work unless the owner explicitly changes priority.
+- Update future tasks in the same controlled change when delivery changes their scope, dependency, order, or acceptance criteria.
+- Do not add completed-task summaries, merge SHAs, PR ledgers, or other legacy narration here; Git/GitHub is the history authority.
+- After a task merges, remove its block at the start of the next controlled change. When no open task remains, retire this file.
 
 ## Product goal
 
@@ -100,28 +108,31 @@ The README still presents `typecheck` and `test` separately as the normal verifi
 
 ## Delivery sequence
 
-Changes are sequential. Do not consume a later reserved YR ID before the prior change is merged unless the owner explicitly changes the plan.
+Changes are sequential. The first task below is the current default assignment. Do not consume a later reserved YR ID before the prior change is merged unless the owner explicitly changes the plan.
 
-### YR-041 — DOCS — Define repository normalization plan
-
-- create this active root implementation plan and reserve YR-042 through YR-051;
-- update `AGENTS.md` with repository authority, plan lifecycle, full delivery-loop/merge behavior, CI-log troubleshooting, and the offline product boundary;
-- update the existing controlled-history map only as required by the current pre-cleanup process;
-- change no runtime, workflow, dependency, provider, or release behavior.
-
-### YR-042 — OPS — Normalize GitHub repository settings
+### YR-042 — OPS — Establish repository settings contract
 
 - add `config/github-repository-settings.json` with the expected default branch, merge methods, branch deletion, required checks, and tag policy;
-- add a documented provider-aware verification command that is intentionally outside credential-free `npm run check`;
+- add `npm run verify:github-settings` as the provider-aware verification command, intentionally outside credential-free `npm run check`;
+- close or supersede uncontrolled dependency PRs rather than merging commits without permanent YR identities;
+- update `AGENTS.md`, `CONTRIBUTING.md`, and this plan so open plan work is selected first, future scope is maintained during delivery, and merged task blocks are purged instead of retained as history;
+- change no repository-admin setting in this task; YR-043 applies the committed contract through an administration-capable session.
+
+Closes F10 and establishes the executable contract for F8.
+
+### YR-043 — OPS — Apply GitHub repository settings
+
+- record the live GitHub settings before mutation;
 - replace classic-only protection with a `main` ruleset that requires pull requests plus `verify` and `change-id`, and blocks force pushes and deletion;
 - add a `v*` tag ruleset that blocks tag update and deletion;
 - enable merge commits only; disable squash and rebase; retain automatic deletion of merged branches;
-- close or supersede Dependabot PR #6 rather than merging an uncontrolled bot commit, and confirm no automated version-update configuration can create unnumbered PRs;
-- record the exact provider state before and after.
+- run `npm run verify:github-settings` against the live repository and require it to pass;
+- record the live settings after mutation;
+- do not change repository source except plan maintenance and any correction proven necessary by the provider verifier.
 
-Closes F8 and F10.
+Closes F8.
 
-### YR-043 — TEST — Capture portable-reader acceptance baseline
+### YR-044 — TEST — Capture portable-reader acceptance baseline
 
 - add Vitest 5 and a DOM implementation only for browser/presentation tests;
 - keep the existing `node:test` pipeline suite and make `npm test` run both test boundaries;
@@ -132,7 +143,7 @@ Closes F8 and F10.
 
 Closes F5.
 
-### YR-044 — BUILD — Adopt the Vite browser pipeline and local dev command
+### YR-045 — BUILD — Adopt the Vite browser pipeline and local dev command
 
 - add Vite 8 as a direct development dependency and create the viewer build configuration;
 - build viewer TypeScript and CSS into content-hashed assets plus a manifest;
@@ -144,7 +155,7 @@ Closes F5.
 
 Closes F1 and F2.
 
-### YR-045 — REFACTOR — Render portable documents with React 19
+### YR-046 — REFACTOR — Render portable documents with React 19
 
 - add React 19, `react-dom`, and their TypeScript types;
 - render the library and unit documents with typed React components and `renderToStaticMarkup`;
@@ -156,7 +167,7 @@ Closes F1 and F2.
 
 Closes F3 and F7's presentation-side build coupling.
 
-### YR-046 — SEC — Enforce strict portable-content security
+### YR-047 — SEC — Enforce strict portable-content security
 
 - move fallback presentation styles into Vite-owned CSS;
 - move startup configuration into inert data attributes or external data files consumed by first-party browser modules;
@@ -167,7 +178,7 @@ Closes F3 and F7's presentation-side build coupling.
 
 Closes F4.
 
-### YR-047 — A11Y — Lock portable-reader accessibility
+### YR-048 — A11Y — Lock portable-reader accessibility
 
 - audit the synthetic library and reader against the repository's WCAG 2.2 aligned — uncertified posture;
 - preserve semantic landmarks and heading order, usable link/button names, visible focus, keyboard navigation, image/page alternatives, responsive reading modes, and non-color-only state;
@@ -175,7 +186,7 @@ Closes F4.
 - add deterministic DOM tests for the accessibility invariants that can be automated and document the small manual browser acceptance set that cannot;
 - make no certification claim.
 
-### YR-048 — BUILD — Make GitHub Releases the only release archive
+### YR-049 — BUILD — Make GitHub Releases the only release archive
 
 - update `release.yml` so it checks out the exact semantic annotated tag, requires `package.json` version to match it, runs `npm ci` and `npm run check`, and publishes GitHub-generated notes from Git/GitHub state;
 - remove `docs/releases/**` and every workflow/document dependency on per-version Markdown;
@@ -185,9 +196,9 @@ Closes F4.
 
 Closes F6 and F7.
 
-### YR-049 — DOCS — Retire reconstruction-era current-tree history
+### YR-050 — DOCS — Retire reconstruction-era current-tree history
 
-- remove `docs/RECONSTRUCTION.md` and historical ledgers under `docs/history/**` once no executable validator depends on them;
+- remove `docs/RECONSTRUCTION.md` and historical ledgers under `docs/history/**` once no executable validator depends on them, and do not replace them with another legacy-document archive;
 - simplify `scripts/check-controlled-history.mjs` and `docs/CHANGE-MANAGEMENT.md` so future direct work does not require reconstruction-specific source provenance or a parallel change map;
 - keep exact immutable legacy exceptions beside the validator only where validation still needs them;
 - update `ARCHITECTURE.md` with the permanent offline-reader §27 exception, React/Vite/static-first presentation boundary, and no-hosted-deployment rule;
@@ -196,7 +207,7 @@ Closes F6 and F7.
 
 Closes F9, F11, and F12.
 
-### YR-050 — TEST — Enforce repository-baseline conformance
+### YR-051 — TEST — Enforce repository-baseline conformance
 
 - add a repository-baseline validator to `npm run check` covering toolchain pins, required commands/files, Vite/React/Vitest versions where applicable, release-history rules, and workflow expectations;
 - verify no checked-in per-version release archive or reconstruction narrative has returned;
@@ -204,9 +215,9 @@ Closes F9, F11, and F12.
 - verify `npm ci`, `npm run check`, `npm run build`, and `git diff --check` from a clean checkout;
 - make the validator describe the intentional no-Wrangler/no-Workers exception rather than reporting it as drift.
 
-### YR-051 — BUILD — Prepare normalized v1.1.0 release
+### YR-052 — BUILD — Prepare normalized v1.1.0 release
 
-After YR-042 through YR-050 are merged and green:
+After YR-042 through YR-051 are merged and green:
 
 - set `package.json` to 1.1.0 and reproduce the final release candidate from a clean checkout;
 - move every durable rule from this plan into `AGENTS.md`, `ARCHITECTURE.md`, `CONTRIBUTING.md`, or the relevant current policy document;

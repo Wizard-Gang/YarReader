@@ -4,17 +4,28 @@
 
 Read `ARCHITECTURE.md`, `CONTRIBUTING.md`, the applicable task, and the active root `IMPLEMENTATION_PLAN.md` when it exists before changing the repository.
 
-Executable source and validated contracts define shipped behavior. Current architecture and policy Markdown explain the present system. An active `IMPLEMENTATION_PLAN.md` may coordinate work and reserve upcoming YR IDs, but it is temporary and cannot silently redefine shipped behavior; the completing change retires it. Superseded repository states, releases, pull requests, and implementation history come from Git/GitHub rather than permanent current-state prose.
+Executable source and validated contracts define shipped behavior. Current architecture and policy Markdown explain the present system. `AGENTS.md` and an active `IMPLEMENTATION_PLAN.md` describe current rules and future work only; they do not retain completed-task or legacy implementation narratives. Superseded repository states, releases, pull requests, completed tasks, and implementation history come from Git/GitHub.
+
+## Active implementation plan
+
+When `IMPLEMENTATION_PLAN.md` exists, reconcile it with current `main` before choosing work:
+
+1. remove any task block whose pull request is already merged; never maintain a `Done`, completed, or historical task list in the plan;
+2. treat the first remaining open task as the default next assignment before unrelated repository work, unless the owner explicitly overrides the plan;
+3. keep only current and future state in the plan: active scope, current findings, decisions, dependencies, open tasks, and acceptance expectations;
+4. update the plan in the same controlled change whenever delivery changes future scope, ordering, dependencies, or acceptance criteria;
+5. after a planned task merges successfully, its task block becomes Git/GitHub history and must be purged at the start of the next controlled change before other implementation work;
+6. retire the plan entirely when no open planned task remains, moving only durable current-state rules into their permanent authority.
+
+Do not create parallel legacy, completed-task, or migration-history Markdown to replace information removed from the active plan.
 
 ## Controlled change discipline
 
 Start from an up-to-date `main` and keep each controlled change limited to one permanent YR ID. Confirm the current sequence with `npm run check:history`.
 
-Branches use `yr-###-imperative-summary`. Commit and pull-request titles use `[YR-###] [TYPE] Imperative summary` with one current WG-ARCH-001 §16 type. The historical YR-035 `CI` title is immutable; new automation work uses `OPS` or `BUILD`.
+Branches use `yr-###-imperative-summary`. Commit and pull-request titles use `[YR-###] [TYPE] Imperative summary` with one current WG-ARCH-001 §16 type. New automation work uses `OPS` or `BUILD`.
 
-Until the active normalization plan retires the reconstruction-era record shape, controlled commit bodies include `Change`, `Reason`, `Impact`, `Risk`, `Controls`, `Validation`, `Evidence`, `Source`, and `Release`. Add `Rollback` when the change affects persistence, migration, archive, activation, schemas, provider settings, release behavior, or another high-risk boundary.
-
-Do not consume a later reserved YR ID before the preceding planned change is merged unless the owner explicitly changes the sequence.
+Controlled commit bodies include `Change`, `Reason`, `Impact`, `Risk`, `Controls`, `Validation`, `Evidence`, `Source`, and `Release`. Add `Rollback` when the change affects persistence, migration, archive, activation, schemas, provider settings, release behavior, or another high-risk boundary.
 
 ## Product and safety boundaries
 
