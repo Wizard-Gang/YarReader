@@ -1,0 +1,25 @@
+{
+  "repository": "Wizard-Gang/YarReader",
+  "defaultBranch": "main",
+  "mergeMethods": {
+    "merge": true,
+    "squash": false,
+    "rebase": false
+  },
+  "deleteBranchOnMerge": true,
+  "rulesets": {
+    "main": {
+      "target": "branch",
+      "enforcement": "active",
+      "include": ["~DEFAULT_BRANCH"],
+      "requiredRules": ["deletion", "non_fast_forward", "pull_request", "required_status_checks"],
+      "requiredStatusChecks": ["verify", "change-id"]
+    },
+    "releaseTags": {
+      "target": "tag",
+      "enforcement": "active",
+      "include": ["refs/tags/v*"],
+      "requiredRules": ["deletion", "update"]
+    }
+  }
+}

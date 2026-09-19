@@ -39,3 +39,4 @@ YR-038,SELF,YarReader,b46868c,2026-08-29,direct,v1.0.1,align pull request automa
 YR-039,SELF,YarReader,fea2507,2026-08-29,direct,v1.0.2,align the public README package metadata and canonical repository location
 YR-040,SELF,YarReader,986ffd2,2026-08-29,direct,v1.0.3,adopt the WG-ARCH-001 repository baseline for toolchain commands and controlled change types
 YR-041,SELF,YarReader,7735f73,2026-09-19,direct,v1.1.0,define repository normalization implementation plan and agent delivery rules
+YR-042,SELF,YarReader,949ba36,2026-09-19,direct,v1.1.0,normalize GitHub settings contract and active-plan task lifecycle
