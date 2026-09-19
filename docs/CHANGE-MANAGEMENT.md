@@ -3,11 +3,16 @@
 YarReader uses permanent `YR-###` identifiers and controlled commit titles:
 
 ```text
-[YR-038] [TYPE] Imperative title
+[YR-040] [TYPE] Imperative title
 ```
 
-Allowed primary types are `INIT`, `FEAT`, `FIX`, `TEST`, `DOCS`, `BUILD`,
-`CI`, `SEC`, `PERF`, `REFACTOR`, and `CHORE`. One change has one primary type.
+New primary types follow the complete WG-ARCH-001 §16 vocabulary: `INIT`,
+`FEAT`, `FIX`, `SEC`, `API`, `A11Y`, `I18N`, `AI`, `DB`, `OPS`,
+`TEST`, `DOCS`, `REFACTOR`, `PERF`, `BUILD`, `REVERT`, and `CHORE`.
+One change has one primary type. The published YR-035 `CI` type remains valid
+as immutable history, but new automation changes use `OPS` or `BUILD`.
+
+Branches use `yr-###-imperative-summary`.
 
 Each commit body records the change, reason, impact boundary, Low/Medium/High
 risk, controls, validation actually performed, exact evidence, source
