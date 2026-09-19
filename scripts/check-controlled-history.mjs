@@ -6,7 +6,28 @@ if (process.env.GITHUB_EVENT_NAME === "pull_request") {
   const subject = records.at(-1)?.split("\x1f")[1] ?? "";
   if (/^Merge [0-9a-f]+ into [0-9a-f]+$/.test(subject)) records.pop();
 }
-const titlePattern = /^\[YR-(\d{3,})\] \[(INIT|FEAT|FIX|SEC|REFACTOR|TEST|PERF|DOCS|BUILD|CI|REVERT|CHORE)\] .+/;
+
+const currentTypes = new Set([
+  "INIT",
+  "FEAT",
+  "FIX",
+  "SEC",
+  "API",
+  "A11Y",
+  "I18N",
+  "AI",
+  "DB",
+  "OPS",
+  "TEST",
+  "DOCS",
+  "REFACTOR",
+  "PERF",
+  "BUILD",
+  "REVERT",
+  "CHORE",
+]);
+const legacyTypes = new Map([["YR-035", "CI"]]);
+const titlePattern = /^\[YR-(\d{3,})\] \[([A-Z0-9]+)\] .+/;
 const requiredSections = ["Change", "Reason", "Impact", "Risk", "Controls", "Validation", "Evidence", "Source", "Release"];
 const seen = new Set();
 const failures = [];
@@ -18,11 +39,22 @@ records.forEach((record, index) => {
     failures.push(`${sha.slice(0, 12)} has an invalid controlled title: ${subject}`);
     return;
   }
+
   const id = `YR-${match[1]}`;
+  const type = match[2];
   const expected = `YR-${String(index + 1).padStart(3, "0")}`;
+  const legacyType = legacyTypes.get(id);
+
+  if (!currentTypes.has(type) && legacyType !== type) {
+    failures.push(`${id} uses unsupported type ${type}`);
+  }
+  if (type === "CI" && legacyType !== "CI") {
+    failures.push(`${id} uses legacy type CI; use OPS or BUILD for new automation changes`);
+  }
   if (id !== expected) failures.push(`${sha.slice(0, 12)} uses ${id}; expected ${expected}`);
   if (seen.has(id)) failures.push(`${id} is duplicated`);
   seen.add(id);
+
   for (const section of requiredSections) {
     if (!new RegExp(`(?:^|\\n)${section}:`, "m").test(body)) failures.push(`${id} is missing ${section}:`);
   }

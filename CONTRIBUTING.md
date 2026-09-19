@@ -7,8 +7,16 @@ requirement → permanent YR ID → branch → implementation → pull request �
             → review → merge → release
 ```
 
-Use a branch such as `yr/YR-038-short-slug` and a commit or pull-request title
-such as `[YR-038] [FIX] Correct archive recovery state`.
+Confirm the next permanent ID with `npm run check:history`, then create a branch
+named `yr-###-imperative-summary`, for example
+`yr-040-adopt-repository-baseline`. Commit and pull-request titles use the
+matching form, such as `[YR-040] [BUILD] Adopt repository baseline`.
+
+New controlled titles use one primary type from the WG-ARCH-001 §16 vocabulary:
+`INIT`, `FEAT`, `FIX`, `SEC`, `API`, `A11Y`, `I18N`, `AI`, `DB`,
+`OPS`, `TEST`, `DOCS`, `REFACTOR`, `PERF`, `BUILD`, `REVERT`, or
+`CHORE`. `CI` is preserved only as immutable historical metadata; use
+`OPS` or `BUILD` for new automation work.
 
 Every controlled change body records `Change`, `Reason`, `Impact`, `Risk`,
 `Controls`, `Validation`, `Evidence`, `Source`, and `Release`. Include
@@ -20,9 +28,8 @@ Before opening a pull request, run:
 
 ```sh
 npm ci
-npm run typecheck
-npm test
-npm run build
+npm run check
+git diff --check
 ```
 
 Do not commit runtime media, catalogs, generated work or exports, downloaded
