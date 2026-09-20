@@ -60,9 +60,15 @@ body.yar-library-body {
   font-size: 15px;
 }
 
-.yar-search:focus {
-  outline: 2px solid var(--yar-accent);
-  outline-offset: 1px;
+.yar-search:focus-visible,
+.yar-select:focus-visible,
+.yar-format-button:focus-visible,
+.yar-tab:focus-visible,
+.yar-chip:focus-visible,
+.yar-card:focus-visible,
+.yar-load-more:focus-visible {
+  outline: 3px solid var(--yar-accent);
+  outline-offset: 2px;
 }
 
 .yar-select {
@@ -127,6 +133,8 @@ body.yar-library-body {
   background: var(--yar-accent-soft);
   color: var(--yar-text);
   font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .yar-filter-label {
@@ -194,6 +202,8 @@ body.yar-library-body {
   border-color: var(--yar-accent);
   color: var(--yar-text);
   font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .yar-active-filters {

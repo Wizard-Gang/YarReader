@@ -69,6 +69,7 @@ describe("static library structure", () => {
     const main = document.querySelector("main[data-library]");
     expect(main).not.toBeNull();
     expect(main?.id).toBe("library");
+    expect(document.documentElement.hasAttribute("dir")).toBe(false);
   });
 
   test("groups every synthetic series into its own ordered section", () => {

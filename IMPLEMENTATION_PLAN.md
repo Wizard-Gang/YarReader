@@ -4,7 +4,7 @@ Status: **Active**
 
 Scope: streamline YarReader around the published WG-ARCH-001 repository baseline while preserving its defining product boundary: a local crash-recoverable ingestion/archive CLI that emits a self-contained offline reader which works from `file://`.
 
-This file is the active planning source of truth for YR-048 through YR-053. Executable source, `ARCHITECTURE.md`, current policy documents, and released interfaces remain authoritative for shipped behavior. This plan contains only current and future work. Merged task blocks are removed instead of being retained as a completed-task ledger. YR-053 retires this plan after the durable rules have moved into their permanent authorities.
+This file is the active planning source of truth for YR-049 through YR-053. Executable source, `ARCHITECTURE.md`, current policy documents, and released interfaces remain authoritative for shipped behavior. This plan contains only current and future work. Merged task blocks are removed instead of being retained as a completed-task ledger. YR-053 retires this plan after the durable rules have moved into their permanent authorities.
 
 ## Context
 
@@ -15,9 +15,9 @@ Current-state observations:
 | Runtime/toolchain | Node 26.9.0, npm 11.19.1, TypeScript 7.0.2, strict ESM |
 | Commands | `dev`, `build`, `typecheck`, `test:node`, `test:browser`, `test`, `check`, `check:history`, `check:safety`, and `verify:github-settings` exist; `dev` is a local-only synthetic Vite viewer preview |
 | Viewer build | Vite 8 owns the viewer build and emits content-hashed JavaScript/CSS plus `dist/viewer/manifest.json`; export resolves assets through that manifest; the viewer TypeScript program is strict and no-emit |
-| Browser presentation | two first-party TypeScript enhancement modules plus Vite-owned CSS; React 19 renders portable documents at export time with `renderToStaticMarkup`; there is no hydration or client router; the Vitest DOM acceptance suite remains authoritative |
-| HTML generation | `src/export-presentation.ts` uses typed React components for library/unit structure and escaping; inline fallback CSS and inline startup scripts remain the YR-048 security boundary |
-| Export boundary | `src/export.ts` owns transaction/orchestration, `src/export-presentation.ts` owns React static documents, `src/export-assets.ts` owns manifest-driven viewer publication, and `src/export-validation.ts` owns portable-export validation; static HTML/images remain complete before enhancement |
+| Browser presentation | two first-party TypeScript enhancement modules plus Vite-owned content-hashed CSS/JavaScript; the external viewer bundle auto-starts from inert document configuration; React 19 remains export-time only with no hydration or client router; the Vitest DOM acceptance suite remains authoritative |
+| HTML/security | typed React 19 components render complete portable documents with `renderToStaticMarkup`; fallback presentation is Vite-owned CSS; startup configuration is inert `data-yar-*` markup consumed by the external Vite viewer; generated portable HTML has no executable inline scripts, `<style>` elements, style attributes, or handler attributes and carries the enforced file-compatible CSP with no `unsafe-inline` |
+| Export boundary | `src/export.ts` owns transaction/orchestration; `src/export-presentation.ts` owns React static documents; `src/export-assets.ts` owns manifest-driven viewer publication; `src/export-validation.ts` owns portable-export validation; `src/export-security.ts` owns the portable HTML/CSP security contract; static HTML/images remain complete before enhancement |
 | Release history | ten checked-in files under `docs/releases/`; `release.yml` reads them to publish GitHub Releases |
 | Current released version | `package.json` 1.0.1 with GitHub Releases through v1.0.1 |
 | Historical documentation | reconstruction narrative plus `docs/history/**` duplicate superseded repository/release state that Git/GitHub already retain |
@@ -58,10 +58,6 @@ These decisions govern the sequence unless a later controlled record explicitly 
 
 ## Findings this sequence closes
 
-### F4 — Inline executable/style content prevents baseline CSP
-
-Generated documents include inline fallback CSS and inline startup scripts. A strict CSP without `'unsafe-inline'` therefore cannot describe the current export.
-
 ### F6 — Current-tree release Markdown duplicates GitHub Releases
 
 `docs/releases/v*.md` is a parallel release archive, and `release.yml` depends on it. WG-ARCH-001 makes annotated tags and GitHub Releases the release-history authority.
@@ -85,17 +81,6 @@ The README still presents `typecheck` and `test` separately as the normal verifi
 ## Delivery sequence
 
 Changes are sequential. The first task below is the current default assignment. Do not consume a later reserved YR ID before the prior change is merged unless the owner explicitly changes the plan.
-
-### YR-048 — SEC — Enforce strict portable-content security
-
-- move fallback presentation styles into Vite-owned CSS;
-- move startup configuration into inert data attributes or external data files consumed by first-party browser modules;
-- remove executable inline scripts, inline event handlers, and inline styles from exported HTML;
-- define and test a `file://`-compatible Content Security Policy with no `'unsafe-inline'`;
-- make export validation reject newly introduced inline executable/style content and unexpected network/runtime APIs;
-- retain the existing path, symlink, archive, manifest-hash, and machine-path safety checks.
-
-Closes F4.
 
 ### YR-049 — A11Y — Lock portable-reader accessibility
 
@@ -136,7 +121,7 @@ Closes F9, F11, and F12.
 
 ### YR-053 — BUILD — Prepare normalized v1.1.0 release
 
-After YR-048 through YR-052 are merged and green:
+After YR-049 through YR-052 are merged and green:
 
 - set `package.json` to 1.1.0 and reproduce the final release candidate from a clean checkout;
 - move every durable rule from this plan into `AGENTS.md`, `ARCHITECTURE.md`, `CONTRIBUTING.md`, or the relevant current policy document;

@@ -136,14 +136,17 @@ function UnitDocument({
           "data-pages": "",
           "data-yar-start": "reader",
           "data-yar-path": itemPath,
-          "data-yar-root": rootPrefix
+          "data-yar-root": rootPrefix,
+          "aria-labelledby": "reader-title"
         },
         createElement(
           "header",
           null,
           createElement("a", { href: `${rootPrefix}index.html` }, "Library"),
-          " · ",
-          unit.series
+          createElement("span", { "aria-hidden": "true" }, " · "),
+          createElement("span", null, unit.series),
+          createElement("span", { "aria-hidden": "true" }, " · "),
+          createElement("h1", { id: "reader-title", className: "yar-static-reader-title" }, unitTitle(unit))
         ),
         ...pageNames.map((page, index) =>
           createElement("img", {
@@ -151,7 +154,7 @@ function UnitDocument({
             src: `pages/${page}`,
             loading: index === 0 ? "eager" : "lazy",
             decoding: "async",
-            alt: `Page ${index + 1}`
+            alt: `Page ${index + 1} of ${pageNames.length}`
           })
         )
       ),
