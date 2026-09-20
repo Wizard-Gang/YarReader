@@ -4,7 +4,7 @@ Status: **Active**
 
 Scope: streamline YarReader around the published WG-ARCH-001 repository baseline while preserving its defining product boundary: a local crash-recoverable ingestion/archive CLI that emits a self-contained offline reader which works from `file://`.
 
-This file is the active planning source of truth for YR-046 through YR-053. Executable source, `ARCHITECTURE.md`, current policy documents, and released interfaces remain authoritative for shipped behavior. This plan contains only current and future work. Merged task blocks are removed instead of being retained as a completed-task ledger. YR-053 retires this plan after the durable rules have moved into their permanent authorities.
+This file is the active planning source of truth for YR-047 through YR-053. Executable source, `ARCHITECTURE.md`, current policy documents, and released interfaces remain authoritative for shipped behavior. This plan contains only current and future work. Merged task blocks are removed instead of being retained as a completed-task ledger. YR-053 retires this plan after the durable rules have moved into their permanent authorities.
 
 ## Context
 
@@ -13,9 +13,9 @@ Current-state observations:
 | Area | Current state |
 |---|---|
 | Runtime/toolchain | Node 26.9.0, npm 11.19.1, TypeScript 7.0.2, strict ESM |
-| Commands | `build`, `typecheck`, `test:node`, `test:browser`, `test`, `check`, `check:history`, `check:safety`, and `verify:github-settings` exist; the required baseline `dev` command is still missing |
-| Viewer build | `tsc -p tsconfig.viewer.json` plus `scripts/copy-viewer-assets.mjs`; no Vite |
-| Browser presentation | two first-party TypeScript modules plus CSS; no React, but a Vitest DOM acceptance suite exists |
+| Commands | `dev`, `build`, `typecheck`, `test:node`, `test:browser`, `test`, `check`, `check:history`, `check:safety`, and `verify:github-settings` exist; `dev` is a local-only synthetic Vite viewer preview |
+| Viewer build | Vite 8 owns the viewer build and emits content-hashed JavaScript/CSS plus `dist/viewer/manifest.json`; export resolves assets through that manifest; the viewer TypeScript program is strict and no-emit |
+| Browser presentation | two first-party TypeScript modules plus CSS; no React yet, with a Vitest DOM acceptance suite |
 | HTML generation | `src/export.ts` assembles complete documents with template strings, a CSS string, and inline startup scripts |
 | Export boundary | static HTML and images are complete before enhancement; portable exports intentionally run without a server |
 | Release history | ten checked-in files under `docs/releases/`; `release.yml` reads them to publish GitHub Releases |
@@ -58,14 +58,6 @@ These decisions govern the sequence unless a later controlled record explicitly 
 
 ## Findings this sequence closes
 
-### F1 — Missing baseline local-development command
-
-`package.json` has no `dev` script. The baseline requires one that is local-only and cannot deploy or select production.
-
-### F2 — Viewer build bypasses the shared browser toolchain
-
-The viewer compiles through a second TypeScript emit and copies CSS with a custom script. Vite 8 is absent, output names are not content hashed, and build ownership is split between ad hoc steps.
-
 ### F3 — Portable HTML is assembled from raw strings
 
 `src/export.ts` owns document structure, escaping, fallback CSS, asset references, generation, validation, and transaction orchestration. React cannot structurally enforce escaping or document composition because it is not in the presentation path.
@@ -97,18 +89,6 @@ The README still presents `typecheck` and `test` separately as the normal verifi
 ## Delivery sequence
 
 Changes are sequential. The first task below is the current default assignment. Do not consume a later reserved YR ID before the prior change is merged unless the owner explicitly changes the plan.
-
-### YR-046 — BUILD — Adopt the Vite browser pipeline and local dev command
-
-- add Vite 8 as a direct development dependency and create the viewer build configuration;
-- build viewer TypeScript and CSS into content-hashed assets plus a manifest;
-- make export copy/reference assets from the manifest instead of fixed `reader.js`, `library.js`, `reader.css`, and `library.css` names;
-- retire `scripts/copy-viewer-assets.mjs` and direct viewer JavaScript emission while keeping a strict viewer typecheck program;
-- add `npm run dev` as a local-only synthetic preview/watch workflow that never touches a production workspace, deploys, or selects a production environment;
-- keep `npm run build` deterministic and deployment-free;
-- update validation so stale/unreferenced Vite outputs cannot enter a portable export.
-
-Closes F1 and F2.
 
 ### YR-047 — REFACTOR — Render portable documents with React 19
 
@@ -172,7 +152,7 @@ Closes F9, F11, and F12.
 
 ### YR-053 — BUILD — Prepare normalized v1.1.0 release
 
-After YR-046 through YR-052 are merged and green:
+After YR-047 through YR-052 are merged and green:
 
 - set `package.json` to 1.1.0 and reproduce the final release candidate from a clean checkout;
 - move every durable rule from this plan into `AGENTS.md`, `ARCHITECTURE.md`, `CONTRIBUTING.md`, or the relevant current policy document;

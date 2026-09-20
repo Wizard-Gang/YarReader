@@ -154,10 +154,13 @@ written under `.library-001.staging-gNNNNNN`. A manifest contains complete file
 membership and SHA-256 hashes. Validation rejects missing/unlisted files,
 changed hashes, absolute machine paths, and network/runtime APIs.
 
-Complete static links and page images are emitted before the bundled viewer is
-added. The viewer progressively enhances those pages with library filtering and
-multi-mode reading, but it cannot make the static fallback incomplete. Viewer
-scripts and styles are compiled locally and contain no network dependency.
+Typed React 19 document components render complete static HTML with
+`renderToStaticMarkup` before the bundled viewer is added. React runs only in
+the local export/build process: there is no hydration or client-side router.
+The viewer progressively enhances the already-complete links and page images
+with library filtering and multi-mode reading, but it cannot make the static
+fallback incomplete. Viewer scripts and styles are compiled locally by Vite
+into manifest-addressed content-hashed assets and contain no network dependency.
 
 After validation, staging is renamed to immutable
 `.library-001.gNNNNNN`. A relative temporary symlink is created and atomically
@@ -172,7 +175,8 @@ interrupted build is resumed before a new generation is attempted.
 - `fast-xml-parser`: ComicInfo and EPUB metadata
 - `sharp`: image validation and normalized WebP output
 - `node-unrar-js`: RAR/CBR extraction
-- TypeScript and Node type declarations as development-only dependencies
+- `react` / `react-dom`: export-time typed static document rendering only
+- TypeScript, React/DOM types, Vite, and test tooling as development-only dependencies
 
 There are no nested packages, compatibility shims, servers, databases, Python
 components, or runtime links to the legacy repository.
