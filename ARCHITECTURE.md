@@ -49,6 +49,10 @@ deterministic and deployment-free.
 - Adapter code never chooses durable identity. Classification never extracts
   pages. Export never interprets source formats.
 - Tests use a fresh temporary workspace and never point at real media.
+- `src/export.ts` owns export transaction/orchestration; `src/export-presentation.ts`
+  owns React static documents; `src/export-assets.ts` owns manifest-driven viewer
+  publication; `src/export-validation.ts` owns portable-export validation; and
+  `src/export-security.ts` owns the portable HTML/CSP security contract.
 
 ## Catalog model
 
