@@ -1,0 +1,47 @@
+/* Static no-JavaScript fallback. Imported first so the enhanced viewer CSS can
+ * refine the same document without requiring any inline style content. */
+:root {
+  color-scheme: dark;
+  background: #111;
+  color: #eee;
+  font: 16px system-ui, sans-serif;
+}
+
+body {
+  margin: 0 auto;
+  max-width: 80rem;
+  padding: 1rem;
+}
+
+a {
+  color: #9bd;
+}
+
+.yar-static-library section {
+  border-top: 1px solid #333;
+  margin-top: 1rem;
+}
+
+.yar-static-library ol {
+  line-height: 1.7;
+}
+
+.yar-reader-body {
+  max-width: none;
+  padding: 0;
+}
+
+.reader-fallback header {
+  position: sticky;
+  top: 0;
+  background: #111e;
+  padding: 0.6rem;
+  z-index: 2;
+}
+
+.reader-fallback img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}

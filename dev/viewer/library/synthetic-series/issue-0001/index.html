@@ -6,15 +6,12 @@
   <title>Synthetic Series - Synthetic Issue 1</title>
 </head>
 <body class="yar-reader-body">
-  <main id="reader" class="reader-fallback" data-pages>
+  <main id="reader" class="reader-fallback" data-pages data-yar-start="reader" data-yar-path="library/synthetic-series/issue-0001/" data-yar-root="../../../">
     <header><a href="../../../index.html">Library</a> · Synthetic Series</header>
     <img src="pages/000001.svg" alt="Synthetic page 1">
     <img src="pages/000002.svg" alt="Synthetic page 2">
   </main>
   <script src="../../../catalog.js"></script>
-  <script type="module">
-    import "/src/viewer/entry.ts";
-    window.ComicReader.start({ path: "library/synthetic-series/issue-0001/", root: "../../../" });
-  </script>
+  <script type="module" src="/src/viewer/entry.ts"></script>
 </body>
 </html>

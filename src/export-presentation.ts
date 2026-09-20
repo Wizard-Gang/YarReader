@@ -3,12 +3,7 @@ import { createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { UnitRecord } from "./domain.js";
 import type { ViewerAssets } from "./export-assets.js";
-
-const FALLBACK_CSS = `:root{color-scheme:dark;background:#111;color:#eee;font:16px system-ui,sans-serif}body{margin:0 auto;max-width:80rem;padding:1rem}a{color:#9bd}.yar-static-library section{border-top:1px solid #333;margin-top:1rem}.yar-static-library ol{line-height:1.7}.yar-reader-body{max-width:none;padding:0}.reader-fallback header{position:sticky;top:0;background:#111e;padding:.6rem;z-index:2}.reader-fallback img{display:block;max-width:100%;height:auto;margin:0 auto}`;
-
-function jsString(value: string): string {
-  return JSON.stringify(value).replaceAll("<", "\\u003c");
-}
+import { PORTABLE_CSP } from "./export-security.js";
 
 export function unitTitle(unit: UnitRecord): string {
   if (unit.title) return unit.title;
@@ -19,6 +14,10 @@ export function unitTitle(unit: UnitRecord): string {
 
 function staticDocument(element: ReactNode): string {
   return `<!doctype html>\n${renderToStaticMarkup(element)}\n`;
+}
+
+function securityMeta(): ReactNode {
+  return createElement("meta", { httpEquiv: "Content-Security-Policy", content: PORTABLE_CSP });
 }
 
 function viewerStyleLinks(viewer: ViewerAssets, prefix: string): ReactNode[] {
@@ -72,9 +71,9 @@ function RootDocument({ units, viewer }: { units: readonly UnitRecord[]; viewer:
       createElement("meta", { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" }),
       createElement("meta", { name: "color-scheme", content: "dark light" }),
       createElement("meta", { name: "generator", content: "YarReader" }),
+      securityMeta(),
       createElement("title", null, "YarReader"),
       createElement("link", { rel: "icon", href: "./assets/favicon.svg", type: "image/svg+xml" }),
-      createElement("style", { dangerouslySetInnerHTML: { __html: FALLBACK_CSS } }),
       ...viewerStyleLinks(viewer, "./")
     ),
     createElement(
@@ -83,14 +82,18 @@ function RootDocument({ units, viewer }: { units: readonly UnitRecord[]; viewer:
       createElement("h1", null, "YarReader"),
       createElement(
         "main",
-        { id: "library", "data-library": "", className: "yar-static-library" },
+        {
+          id: "library",
+          "data-library": "",
+          "data-yar-start": "library",
+          "data-yar-root": "./",
+          "data-yar-label": "YarReader",
+          className: "yar-static-library"
+        },
         createElement(LibrarySections, { units })
       ),
       createElement("script", { src: "./catalog.js" }),
-      createElement("script", { src: `./${viewer.script}` }),
-      createElement("script", {
-        dangerouslySetInnerHTML: { __html: '\n  ComicLibrary.start({ root: "./", label: "YarReader" });\n' }
-      })
+      createElement("script", { src: `./${viewer.script}` })
     )
   );
 }
@@ -117,9 +120,9 @@ function UnitDocument({
       createElement("meta", { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" }),
       createElement("meta", { name: "color-scheme", content: "dark light" }),
       createElement("meta", { name: "generator", content: "YarReader" }),
+      securityMeta(),
       createElement("title", null, `${unit.series} - ${unitTitle(unit)}`),
       createElement("link", { rel: "icon", href: `${rootPrefix}assets/favicon.svg`, type: "image/svg+xml" }),
-      createElement("style", { dangerouslySetInnerHTML: { __html: FALLBACK_CSS } }),
       ...viewerStyleLinks(viewer, rootPrefix)
     ),
     createElement(
@@ -127,7 +130,14 @@ function UnitDocument({
       { className: "yar-reader-body" },
       createElement(
         "main",
-        { id: "reader", className: "reader-fallback", "data-pages": "" },
+        {
+          id: "reader",
+          className: "reader-fallback",
+          "data-pages": "",
+          "data-yar-start": "reader",
+          "data-yar-path": itemPath,
+          "data-yar-root": rootPrefix
+        },
         createElement(
           "header",
           null,
@@ -146,12 +156,7 @@ function UnitDocument({
         )
       ),
       createElement("script", { src: `${rootPrefix}catalog.js` }),
-      createElement("script", { src: `${rootPrefix}${viewer.script}` }),
-      createElement("script", {
-        dangerouslySetInnerHTML: {
-          __html: `\n  ComicReader.start({ path: ${jsString(itemPath)}, root: ${jsString(rootPrefix)} });\n`
-        }
-      })
+      createElement("script", { src: `${rootPrefix}${viewer.script}` })
     )
   );
 }

@@ -3,6 +3,7 @@ import path from "node:path";
 import { z } from "zod";
 import { loadViewerAssets } from "./export-assets.js";
 import { listTree, safeJoin, sha256File } from "./fs.js";
+import { assertPortableHtmlSecurity } from "./export-security.js";
 
 export const ManifestSchema = z.object({
   schemaVersion: z.literal(1),
@@ -60,6 +61,7 @@ export async function validateExport(root: string): Promise<{ files: number; uni
     if (await sha256File(file) !== expectedHash) throw new Error(`Export hash mismatch: ${relative}`);
     if (/\.(?:html|js|css|json)$/i.test(relative)) {
       const text = await readFile(file, "utf8");
+      if (relative.endsWith(".html")) assertPortableHtmlSecurity(text, relative);
       if (/file:\/\/\/|\/Users\/|[A-Za-z]:\\\\/.test(text)) throw new Error(`Machine path leaked into export: ${relative}`);
       if (/\bfetch\s*\(|XMLHttpRequest|indexedDB|serviceWorker|\bimport\s*\(/i.test(text)) throw new Error(`Network/runtime API is forbidden in portable export: ${relative}`);
     }

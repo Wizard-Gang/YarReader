@@ -7,16 +7,13 @@
 </head>
 <body class="yar-library-body">
   <h1>YarReader synthetic dev preview</h1>
-  <main id="library" data-library class="yar-static-library">
+  <main id="library" data-library data-yar-start="library" data-yar-root="./" data-yar-label="YarReader Dev" class="yar-static-library">
     <section>
       <h2>Synthetic Series</h2>
       <ol><li><a href="./library/synthetic-series/issue-0001/index.html">Synthetic Issue 1</a></li></ol>
     </section>
   </main>
   <script src="./catalog.js"></script>
-  <script type="module">
-    import "/src/viewer/entry.ts";
-    window.ComicLibrary.start({ root: "./", label: "YarReader Dev" });
-  </script>
+  <script type="module" src="/src/viewer/entry.ts"></script>
 </body>
 </html>

@@ -427,7 +427,6 @@
         };
         activeChips.appendChild(clear);
       }
-      activeChips.style.display = any ? "" : "none";
     }
 
     function draw(): void {

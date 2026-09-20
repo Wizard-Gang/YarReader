@@ -157,10 +157,15 @@ changed hashes, absolute machine paths, and network/runtime APIs.
 Typed React 19 document components render complete static HTML with
 `renderToStaticMarkup` before the bundled viewer is added. React runs only in
 the local export/build process: there is no hydration or client-side router.
-The viewer progressively enhances the already-complete links and page images
-with library filtering and multi-mode reading, but it cannot make the static
-fallback incomplete. Viewer scripts and styles are compiled locally by Vite
-into manifest-addressed content-hashed assets and contain no network dependency.
+Portable documents carry a file-compatible Content Security Policy with no
+unsafe-inline allowance. Fallback presentation lives in Vite-owned CSS and
+startup options live in inert `data-yar-*` attributes consumed by the bundled
+viewer; generated HTML contains no inline executable scripts, style elements,
+style attributes, or handler attributes. The viewer progressively enhances the
+already-complete links and page images with library filtering and multi-mode
+reading, but it cannot make the static fallback incomplete. Viewer scripts and
+styles are compiled locally by Vite into manifest-addressed content-hashed
+assets and contain no network dependency.
 
 After validation, staging is renamed to immutable
 `.library-001.gNNNNNN`. A relative temporary symlink is created and atomically

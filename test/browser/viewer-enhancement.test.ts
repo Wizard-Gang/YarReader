@@ -10,7 +10,6 @@ import { afterAll, afterEach, beforeAll, describe, expect, test } from "vitest";
 import {
   buildPortableFixture,
   enhancedDocument,
-  libraryModule,
   pressKey,
   readerModule,
   type EnhancedDocument,
@@ -31,14 +30,12 @@ afterAll(async () => fixture?.cleanup());
 async function startedLibrary(): Promise<EnhancedDocument> {
   const enhanced = await enhancedDocument(fixture.root, fixture.indexHtml);
   open.push(enhanced);
-  libraryModule(enhanced.window).start({ root: "./", label: "YarReader" });
   return enhanced;
 }
 
 async function startedReader(unitPath: string): Promise<EnhancedDocument> {
   const enhanced = await enhancedDocument(fixture.root, path.join(fixture.root, unitPath, "index.html"));
   open.push(enhanced);
-  readerModule(enhanced.window).start({ path: unitPath, root: UNIT_ROOT });
   return enhanced;
 }
 
@@ -86,6 +83,12 @@ describe("library module", () => {
     const catalog = (enhanced.window as unknown as { COMIC_LIBRARY: { itemCount: number; items: unknown[] } }).COMIC_LIBRARY;
     expect(catalog.itemCount).toBe(fixture.units);
     expect(catalog.items).toHaveLength(fixture.units);
+  });
+
+  test("auto-starts from inert document configuration", async () => {
+    const { document } = await startedLibrary();
+    expect(document.querySelector(".yar-library")).not.toBeNull();
+    expect(document.querySelector("[style]")).toBeNull();
   });
 
   test("builds search, sort, genre and format controls", async () => {
@@ -181,6 +184,12 @@ describe("reader module", () => {
     expect(typeof globals.ComicReader?.start).toBe("function");
     expect(typeof globals.YarReader?.start).toBe("function");
     expect(globals.YarReader?.start).toBe(globals.ComicReader?.start);
+  });
+
+  test("auto-starts from inert document configuration without inline styles", async () => {
+    const { document } = await startedReader(LTR_UNIT);
+    expect(document.querySelector(".yar-app")).not.toBeNull();
+    expect(document.querySelector("[style]")).toBeNull();
   });
 
   test("renders reader controls and a page counter", async () => {
