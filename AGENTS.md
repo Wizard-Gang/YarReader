@@ -19,6 +19,19 @@ When `IMPLEMENTATION_PLAN.md` exists, reconcile it with current `main` before ch
 
 Do not create parallel legacy, completed-task, or migration-history Markdown to replace information removed from the active plan.
 
+### `do needful`
+
+When the owner says `do needful` (or an equivalent instruction to continue), do not wait for a separately numbered prompt. Treat it as authorization to resume the active repository workflow:
+
+1. fetch current `main` and reconcile it with open pull requests and `IMPLEMENTATION_PLAN.md`;
+2. merge any already-green/current authoritative PR first when merging is possible;
+3. purge merged task blocks and resolved findings from the active plan;
+4. select the first remaining open planned task unless the owner explicitly changes priority;
+5. carry that task through branch → implementation → validation → controlled commit → pull request → exact-head CI → merge;
+6. after a successful merge, finish the session with a copy-paste prompt for the next open planned task, including the required purge step and any real blocker/dependency.
+
+A `do needful` instruction is not permission to fabricate provider changes, validations, releases, or merges that the available session cannot actually perform. If a required external/admin action is unavailable, preserve the controlled branch/PR truthfully and make that blocker the first requirement in the handoff prompt.
+
 ## Controlled change discipline
 
 Start from an up-to-date `main` and keep each controlled change limited to one permanent YR ID. Confirm the current sequence with `npm run check:history`.
