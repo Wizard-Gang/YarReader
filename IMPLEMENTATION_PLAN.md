@@ -4,7 +4,7 @@ Status: **Active**
 
 Scope: streamline YarReader around the published WG-ARCH-001 repository baseline while preserving its defining product boundary: a local crash-recoverable ingestion/archive CLI that emits a self-contained offline reader which works from `file://`.
 
-This file is the active planning source of truth for YR-049 through YR-053. Executable source, `ARCHITECTURE.md`, current policy documents, and released interfaces remain authoritative for shipped behavior. This plan contains only current and future work. Merged task blocks are removed instead of being retained as a completed-task ledger. YR-053 retires this plan after the durable rules have moved into their permanent authorities.
+This file is the active planning source of truth for YR-050 through YR-053. Executable source, `ARCHITECTURE.md`, current policy documents, and released interfaces remain authoritative for shipped behavior. This plan contains only current and future work. Merged task blocks are removed instead of being retained as a completed-task ledger. YR-053 retires this plan after the durable rules have moved into their permanent authorities.
 
 ## Context
 
@@ -18,7 +18,7 @@ Current-state observations:
 | Browser presentation | two first-party TypeScript enhancement modules plus Vite-owned content-hashed CSS/JavaScript; the external viewer bundle auto-starts from inert document configuration; React 19 remains export-time only with no hydration or client router; the Vitest DOM acceptance suite remains authoritative |
 | HTML/security | typed React 19 components render complete portable documents with `renderToStaticMarkup`; fallback presentation is Vite-owned CSS; startup configuration is inert `data-yar-*` markup consumed by the external Vite viewer; generated portable HTML has no executable inline scripts, `<style>` elements, style attributes, or handler attributes and carries the enforced file-compatible CSP with no `unsafe-inline` |
 | Export boundary | `src/export.ts` owns transaction/orchestration; `src/export-presentation.ts` owns React static documents; `src/export-assets.ts` owns manifest-driven viewer publication; `src/export-validation.ts` owns portable-export validation; `src/export-security.ts` owns the portable HTML/CSP security contract; static HTML/images remain complete before enhancement |
-| Release history | ten checked-in files under `docs/releases/`; `release.yml` reads them to publish GitHub Releases |
+| Release history | annotated semantic tags and GitHub Releases are the sole release archive; `release.yml` verifies the exact tagged tree and package version, runs the repository gate, and publishes generated notes from Git/GitHub state; there is no production deployment stage |
 | Current released version | `package.json` 1.0.1 with GitHub Releases through v1.0.1 |
 | Historical documentation | reconstruction narrative plus `docs/history/**` duplicate superseded repository/release state that Git/GitHub already retain |
 | GitHub settings | active `main` and `v*` rulesets match `config/github-repository-settings.json`; merge commits are the only merge method; merged branches are deleted |
@@ -58,14 +58,6 @@ These decisions govern the sequence unless a later controlled record explicitly 
 
 ## Findings this sequence closes
 
-### F6 — Current-tree release Markdown duplicates GitHub Releases
-
-`docs/releases/v*.md` is a parallel release archive, and `release.yml` depends on it. WG-ARCH-001 makes annotated tags and GitHub Releases the release-history authority.
-
-### F7 — Release publication does not fully enforce the shared tag contract
-
-The workflow verifies that a tag is annotated, but it does not require the checked-out `package.json` version to equal the semantic tag and still sources notes from repository Markdown.
-
 ### F9 — Reconstruction-era documentation remains in the current tree
 
 `docs/RECONSTRUCTION.md` and `docs/history/**` narrate superseded implementation/publication state. That information is already available from immutable Git/GitHub history and should not stay as a second authority.
@@ -81,14 +73,6 @@ The README still presents `typecheck` and `test` separately as the normal verifi
 ## Delivery sequence
 
 Changes are sequential. The first task below is the current default assignment. Do not consume a later reserved YR ID before the prior change is merged unless the owner explicitly changes the plan.
-
-### YR-049 — A11Y — Lock portable-reader accessibility
-
-- audit the synthetic library and reader against the repository's WCAG 2.2 aligned — uncertified posture;
-- preserve semantic landmarks and heading order, usable link/button names, visible focus, keyboard navigation, image/page alternatives, responsive reading modes, and non-color-only state;
-- keep right-to-left reading behavior distinct from document language/direction metadata;
-- add deterministic DOM tests for the accessibility invariants that can be automated and document the small manual browser acceptance set that cannot;
-- make no certification claim.
 
 ### YR-050 — BUILD — Make GitHub Releases the only release archive
 
@@ -121,7 +105,7 @@ Closes F9, F11, and F12.
 
 ### YR-053 — BUILD — Prepare normalized v1.1.0 release
 
-After YR-049 through YR-052 are merged and green:
+After YR-050 through YR-052 are merged and green:
 
 - set `package.json` to 1.1.0 and reproduce the final release candidate from a clean checkout;
 - move every durable rule from this plan into `AGENTS.md`, `ARCHITECTURE.md`, `CONTRIBUTING.md`, or the relevant current policy document;

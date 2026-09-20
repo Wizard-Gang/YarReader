@@ -8,30 +8,54 @@ permissions:
   contents: write
 
 jobs:
-  reproduce:
+  release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: ${{ github.ref }}
           fetch-depth: 0
       - uses: actions/setup-node@v7
         with:
           node-version-file: .node-version
           cache: npm
-      - name: Reproduce tagged state
+      - name: Validate exact semantic annotated tag
+        shell: bash
         run: |
-          npm ci
-          npm run check
-      - name: Require annotated tag
-        run: |
-          tag_ref="refs/tags/$GITHUB_REF_NAME"
+          set -euo pipefail
+
+          tag="$GITHUB_REF_NAME"
+          tag_ref="refs/tags/$tag"
+
+          if [[ ! "$tag" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Release tag must be semantic and start with v: $tag"
+            exit 1
+          fi
+
           git fetch --force --no-tags origin "$tag_ref:$tag_ref"
-          test "$(git cat-file -t "$tag_ref")" = tag
-      - name: Publish release
+
+          if [[ "$(git cat-file -t "$tag_ref")" != "tag" ]]; then
+            echo "::error::Release tag must be annotated: $tag"
+            exit 1
+          fi
+
+          tagged_commit="$(git rev-parse "$tag_ref^{commit}")"
+          checked_out_commit="$(git rev-parse HEAD)"
+          if [[ "$checked_out_commit" != "$tagged_commit" ]]; then
+            echo "::error::Checkout is not the commit identified by $tag"
+            exit 1
+          fi
+
+          package_version="$(node -p "JSON.parse(require('node:fs').readFileSync('package.json', 'utf8')).version")"
+          if [[ "$tag" != "v$package_version" ]]; then
+            echo "::error::Tag $tag does not match package.json version $package_version"
+            exit 1
+          fi
+      - name: Install exact dependencies
+        run: npm ci
+      - name: Verify tagged state
+        run: npm run check
+      - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          git fetch --quiet origin main
-          notes=$(mktemp)
-          git show "origin/main:docs/releases/$GITHUB_REF_NAME.md" > "$notes"
-          gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file "$notes" --verify-tag
+        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes --verify-tag
