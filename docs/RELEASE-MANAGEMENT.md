@@ -1,16 +1,34 @@
 # Release management
 
-YarReader releases are annotated semantic-version tags. A tag identifies a
-complete buildable and testable product state; tags are not moved or deleted.
+YarReader publishes source-only GitHub Releases from annotated semantic-version
+tags. The annotated tag and its GitHub Release are the release-history authority;
+the repository does not keep per-version release Markdown.
 
-Before tagging a release:
+YarReader has no hosted production deployment stage. The released product is the
+local/offline repository state used to build the CLI and the portable static
+reader that opens from `file://`.
 
-1. Install exactly from the lockfile with `npm ci`.
-2. Run `npm run typecheck`, `npm test`, and `npm run build`.
-3. Run the repository safety and history-control checks.
-4. Confirm the release notes and provenance map.
-5. Create and push the annotated tag only after `main` is protected and green.
+## Release procedure
 
-The v0.x tags document reconstructed architectural milestones. v1.0.1 is the
-current verified public baseline. Source dates remain provenance metadata and
-are not used to backdate reconstructed commits or releases.
+1. Merge the release-preparation change to `main` and confirm required CI is
+   green.
+2. From a clean checkout of that exact `main` commit, run:
+
+   ```sh
+   npm ci
+   npm run check
+   npm run build
+   git diff --check
+   ```
+
+3. Confirm `package.json` contains the intended semantic version.
+4. Create an annotated `v<package-version>` tag on that exact commit and push
+   the tag. Never move or replace a published tag.
+5. The `Release` workflow checks out the exact pushed tag, proves that the tag
+   is semantic and annotated, verifies that `package.json` matches it, runs
+   `npm ci` and `npm run check`, and creates the GitHub Release with notes
+   generated from Git/GitHub state.
+6. Verify the Release workflow and resulting GitHub Release.
+
+Published tags and GitHub Releases are immutable. Corrections move forward
+through a new controlled change and a new semantic version/tag.
