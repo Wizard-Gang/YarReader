@@ -42,6 +42,11 @@ describe("document metadata", () => {
     expect(icon).toBe("./assets/favicon.svg");
   });
 
+  test("is static markup with no React runtime or hydration marker", () => {
+    expect(document.querySelector("[data-reactroot]")).toBeNull();
+    expect([...document.querySelectorAll("script[src]")].some((script) => (script.getAttribute("src") ?? "").includes("react"))).toBe(false);
+  });
+
   test("references only relative stylesheets", () => {
     const sheets = [...document.querySelectorAll('link[rel="stylesheet"]')].map((link) => link.getAttribute("href") ?? "");
     expect(sheets.length).toBeGreaterThan(0);
