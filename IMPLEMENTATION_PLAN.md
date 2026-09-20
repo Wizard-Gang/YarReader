@@ -4,7 +4,7 @@ Status: **Active**
 
 Scope: streamline YarReader around the published WG-ARCH-001 repository baseline while preserving its defining product boundary: a local crash-recoverable ingestion/archive CLI that emits a self-contained offline reader which works from `file://`.
 
-This file is the active planning source of truth for YR-051 through YR-053. Executable source, `ARCHITECTURE.md`, current policy documents, and released interfaces remain authoritative for shipped behavior. This plan contains only current and future work. Merged task blocks are removed instead of being retained as a completed-task ledger. YR-053 retires this plan after the durable rules have moved into their permanent authorities.
+This file is the active planning source of truth for YR-052 through YR-053. Executable source, `ARCHITECTURE.md`, current policy documents, and released interfaces remain authoritative for shipped behavior. This plan contains only current and future work. Merged task blocks are removed instead of being retained as a completed-task ledger. YR-053 retires this plan after the durable rules have moved into their permanent authorities.
 
 ## Context
 
@@ -13,7 +13,7 @@ Current-state observations:
 | Area | Current state |
 |---|---|
 | Runtime/toolchain | Node 26.9.0, npm 11.19.1, TypeScript 7.0.2, strict ESM |
-| Commands | `dev`, `build`, `typecheck`, `test:node`, `test:browser`, `test`, `check`, `check:history`, `check:safety`, and `verify:github-settings` exist; `dev` is a local-only synthetic Vite viewer preview |
+| Commands | `dev`, `build`, `typecheck`, `test:node`, `test:browser`, `test`, `check`, `check:history`, `check:safety`, `check:baseline`, and `verify:github-settings` exist; `typecheck` covers every TypeScript program; `dev` is a local-only synthetic Vite viewer preview |
 | Viewer build | Vite 8 owns the viewer build and emits content-hashed JavaScript/CSS plus `dist/viewer/manifest.json`; export resolves assets through that manifest; the viewer TypeScript program is strict and no-emit |
 | Browser presentation | two first-party TypeScript enhancement modules plus Vite-owned content-hashed CSS/JavaScript; the external viewer bundle auto-starts from inert document configuration; React 19 remains export-time only with no hydration or client router; the Vitest DOM acceptance suite remains authoritative |
 | HTML/security | typed React 19 components render complete portable documents with `renderToStaticMarkup`; fallback presentation is Vite-owned CSS; startup configuration is inert `data-yar-*` markup consumed by the external Vite viewer; generated portable HTML has no executable inline scripts, `<style>` elements, style attributes, or handler attributes and carries the enforced file-compatible CSP with no `unsafe-inline` |
@@ -60,16 +60,6 @@ These decisions govern the sequence unless a later controlled record explicitly 
 
 Changes are sequential. The first task below is the current default assignment. Do not consume a later reserved YR ID before the prior change is merged unless the owner explicitly changes the plan.
 
-### YR-051 — DOCS — Retire reconstruction-era current-tree history
-
-- remove `docs/RECONSTRUCTION.md` and historical ledgers under `docs/history/**` once no executable validator depends on them, and do not replace them with another legacy-document archive;
-- simplify `scripts/check-controlled-history.mjs` and `docs/CHANGE-MANAGEMENT.md` so future direct work does not require reconstruction-specific source provenance or a parallel change map;
-- keep exact immutable legacy exceptions beside the validator only where validation still needs them;
-- update `ARCHITECTURE.md` with the permanent offline-reader §27 exception, React/Vite/static-first presentation boundary, and no-hosted-deployment rule;
-- update README verification and documentation links to the canonical current-state commands/docs;
-- retain Git/GitHub as the authority for superseded states and release history.
-
-
 ### YR-052 — TEST — Enforce repository-baseline conformance
 
 - add a repository-baseline validator to `npm run check` covering toolchain pins, required commands/files, Vite/React/Vitest versions where applicable, release-history rules, and workflow expectations;
@@ -80,7 +70,7 @@ Changes are sequential. The first task below is the current default assignment. 
 
 ### YR-053 — BUILD — Prepare normalized v1.1.0 release
 
-After YR-051 through YR-052 are merged and green:
+After YR-052 is merged and green:
 
 - set `package.json` to 1.1.0 and reproduce the final release candidate from a clean checkout;
 - move every durable rule from this plan into `AGENTS.md`, `ARCHITECTURE.md`, `CONTRIBUTING.md`, or the relevant current policy document;
