@@ -65,7 +65,7 @@ describe("page images are usable without JavaScript", () => {
     for (const [index, image] of images.entries()) {
       const source = image.getAttribute("src") ?? "";
       expect(source).toBe(`pages/${String(index + 1).padStart(6, "0")}.webp`);
-      expect(image.getAttribute("alt")).toBe(`Page ${index + 1}`);
+      expect(image.getAttribute("alt")).toBe(`Page ${index + 1} of ${FIXTURE_PAGE_COUNT}`);
       expect(image.getAttribute("decoding")).toBe("async");
       await expect(access(path.join(fixture.root, UNIT_PATH, source))).resolves.toBeUndefined();
     }
@@ -106,6 +106,21 @@ describe("static navigation", () => {
 
   test("the series is named in the static header", () => {
     expect(document.querySelector("main[data-pages] header")?.textContent).toContain(UNIT_SERIES);
+  });
+});
+
+describe("accessibility semantics", () => {
+  test("exposes one primary heading and names the reader landmark", () => {
+    const main = document.querySelector("main[data-pages]");
+    const heading = main?.querySelector("h1#reader-title");
+    expect(document.querySelectorAll("h1")).toHaveLength(1);
+    expect(heading?.textContent).toBe(UNIT_TITLE);
+    expect(main?.getAttribute("aria-labelledby")).toBe("reader-title");
+  });
+
+  test("keeps reading direction separate from document language metadata", () => {
+    expect(document.documentElement.getAttribute("lang")).toBe("en");
+    expect(document.documentElement.hasAttribute("dir")).toBe(false);
   });
 });
 

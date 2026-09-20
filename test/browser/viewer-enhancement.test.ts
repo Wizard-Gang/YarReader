@@ -42,28 +42,30 @@ async function startedReader(unitPath: string): Promise<EnhancedDocument> {
 /** Controls a keyboard user reaches without a custom tab stop. */
 const NATIVELY_FOCUSABLE = new Set(["A", "BUTTON", "INPUT", "SELECT", "TEXTAREA"]);
 
-/**
- * Every click target must either be a natively focusable, labelled control, or
- * be one of the named pointer-only affordances whose action is also bound to a
- * keyboard shortcut. Listing the exceptions explicitly means a newly introduced
- * unfocusable click target fails this baseline instead of passing silently.
- */
-function assertKeyboardOperable(container: Element, pointerOnly: readonly string[] = []): void {
+function isKeyboardFocusable(element: Element): boolean {
+  return NATIVELY_FOCUSABLE.has(element.tagName) || element.getAttribute("tabindex") === "0";
+}
+
+/** Every click target must be keyboard reachable and expose a meaningful name. */
+function assertKeyboardOperable(container: Element): void {
   const clickable = [...container.querySelectorAll("*")].filter(
     (element) => typeof (element as HTMLElement & { onclick?: unknown }).onclick === "function",
   );
   expect(clickable.length).toBeGreaterThan(0);
 
-  const unfocusable = clickable.filter((element) => !NATIVELY_FOCUSABLE.has(element.tagName));
-  expect(unfocusable.map((element) => element.className).sort()).toEqual([...pointerOnly].sort());
+  const unfocusable = clickable.filter((element) => !isKeyboardFocusable(element));
+  expect(unfocusable).toEqual([]);
 
-  const controls = clickable.filter((element) => NATIVELY_FOCUSABLE.has(element.tagName));
-  expect(controls.length).toBeGreaterThan(0);
-  for (const element of controls) {
+  for (const element of clickable) {
     if (element.tagName === "BUTTON") expect(element.getAttribute("type")).toBe("button");
     if (element.tagName === "A") expect(element.getAttribute("href")).toBeTruthy();
     expect(element.getAttribute("tabindex")).not.toBe("-1");
-    expect((element.textContent ?? "").trim() || element.getAttribute("aria-label") || "").not.toBe("");
+    expect(
+      element.getAttribute("aria-label") ||
+        (element.textContent ?? "").trim() ||
+        element.getAttribute("title") ||
+        "",
+    ).not.toBe("");
   }
 }
 
@@ -99,6 +101,7 @@ describe("library module", () => {
 
     const selects = [...document.querySelectorAll("select.yar-select")];
     expect(selects.length).toBeGreaterThanOrEqual(2);
+    expect(selects[0]?.getAttribute("aria-label")).toBe("Sort library");
 
     const genre = document.querySelector<HTMLSelectElement>("select.yar-genre-select")!;
     expect(genre.getAttribute("aria-label")).toBe("Filter by genre");
@@ -114,12 +117,17 @@ describe("library module", () => {
 
   test("opens on the series view and switches to chapters", async () => {
     const { document } = await startedLibrary();
-    const tabs = [...document.querySelectorAll<HTMLButtonElement>("nav.yar-tabs button.yar-tab")];
+    const tabsNav = document.querySelector("nav.yar-tabs")!;
+    expect(tabsNav.getAttribute("aria-label")).toBe("Library views");
+    const tabs = [...tabsNav.querySelectorAll<HTMLButtonElement>("button.yar-tab")];
     expect(tabs.map((tab) => tab.textContent)).toEqual(["Series", "Chapters"]);
     expect(tabs[0]!.className).toContain("yar-tab-on");
+    expect(tabs.map((tab) => tab.getAttribute("aria-pressed"))).toEqual(["true", "false"]);
     expect(document.querySelectorAll(".yar-results .yar-card")).toHaveLength(3);
 
     tabs[1]!.click();
+    const updatedTabs = [...document.querySelectorAll<HTMLButtonElement>("nav.yar-tabs button.yar-tab")];
+    expect(updatedTabs.map((tab) => tab.getAttribute("aria-pressed"))).toEqual(["false", "true"]);
     expect(document.querySelectorAll(".yar-results .yar-card")).toHaveLength(fixture.units);
     const cards = [...document.querySelectorAll<HTMLAnchorElement>(".yar-results a.yar-card")];
     for (const card of cards) expect(card.href.startsWith("file:")).toBe(true);
@@ -134,10 +142,13 @@ describe("library module", () => {
 
     manga.click();
     expect(document.querySelector("button.yar-format-button-on")?.textContent).toBe("Manga (RTL)");
+    expect(document.querySelector("button.yar-format-button-on")?.getAttribute("aria-pressed")).toBe("true");
     expect(document.querySelectorAll(".yar-results .yar-card")).toHaveLength(1);
     expect(document.querySelector(".yar-results .yar-card-series")?.textContent).toBe("Example Mirror");
     expect(window.location.hash).toContain("format=rtl");
-    expect(document.querySelector(".yar-active-filters .yar-chip-active")?.textContent).toContain("format: Manga");
+    const chip = document.querySelector(".yar-active-filters .yar-chip-active");
+    expect(chip?.textContent).toContain("format: Manga");
+    expect(chip?.getAttribute("aria-label")).toBe("Remove format filter: Manga");
   });
 
   test("genre filtering and clearing restore the whole library", async () => {
@@ -195,16 +206,36 @@ describe("reader module", () => {
   test("renders reader controls and a page counter", async () => {
     const { document } = await startedReader(LTR_UNIT);
     expect(document.querySelector(".yar-app")).not.toBeNull();
+    expect(document.querySelector("main#reader")?.getAttribute("aria-labelledby")).toBe("yar-reader-heading");
+    expect(document.querySelector("h1#yar-reader-heading")?.textContent).toBe("Example Chapter 1");
     expect(document.querySelector(".yar-counter")?.textContent).toBe("1 / 3");
+    expect(document.querySelector(".yar-counter")?.getAttribute("role")).toBe("status");
+    expect(document.querySelector(".yar-toast")?.getAttribute("role")).toBe("status");
+
+    const stage = document.querySelector<HTMLElement>(".yar-stage")!;
+    expect(stage.getAttribute("role")).toBe("region");
+    expect(stage.getAttribute("aria-label")).toBe("Reader pages");
+    expect(stage.getAttribute("tabindex")).toBe("0");
+    expect(stage.getAttribute("aria-keyshortcuts")).toContain("ArrowRight");
 
     const labels = [...document.querySelectorAll(".yar-bar-top .yar-tools button")].map((button) => button.getAttribute("title"));
     expect(labels).toEqual(["Reading mode (m)", "Reading direction (d)", "Fit mode (w / p)", "Zoom out", "Zoom in", "Fullscreen (f)"]);
+    const accessibleLabels = [...document.querySelectorAll(".yar-bar-top .yar-tools button")].map((button) => button.getAttribute("aria-label"));
+    expect(accessibleLabels).toEqual([
+      "Reading mode: Paged",
+      "Reading direction: left to right",
+      "Fit mode: width",
+      "Zoom out",
+      "Zoom in",
+      "Toggle fullscreen",
+    ]);
 
     const slider = document.querySelector<HTMLInputElement>("input.yar-slider")!;
     expect(slider.type).toBe("range");
     expect(slider.min).toBe("1");
     expect(slider.max).toBe("3");
     expect(slider.getAttribute("aria-label")).toBe("Jump to page");
+    expect(slider.getAttribute("aria-valuetext")).toBe("Page 1 of 3");
 
     const jump = document.querySelector<HTMLInputElement>("input.yar-jump")!;
     expect(jump.type).toBe("number");
@@ -271,6 +302,9 @@ describe("reader module", () => {
     expect(direction()).toBe("RTL");
 
     const rtl = await startedReader(RTL_UNIT);
+    expect(rtl.document.documentElement.getAttribute("lang")).toBe("en");
+    expect(rtl.document.documentElement.hasAttribute("dir")).toBe(false);
+    expect(rtl.document.querySelector(".yar-app")?.getAttribute("data-direction")).toBe("rtl");
     expect(rtl.document.querySelectorAll(".yar-bar-top .yar-tools button")[1]?.textContent).toBe("RTL");
   });
 
@@ -308,6 +342,28 @@ describe("reader module", () => {
     expect(enhanced.document.querySelector(".yar-counter")?.textContent).toBe("1 / 3");
   });
 
+  test("focused native controls keep their native keyboard behavior", async () => {
+    const enhanced = await startedReader(LTR_UNIT);
+    const mode = enhanced.document.querySelector<HTMLButtonElement>(".yar-bar-top .yar-tools button")!;
+    mode.focus();
+    const accepted = mode.dispatchEvent(
+      new enhanced.window.KeyboardEvent("keydown", { key: " ", bubbles: true, cancelable: true }),
+    );
+    expect(accepted).toBe(true);
+    expect(enhanced.document.querySelector(".yar-counter")?.textContent).toBe("1 / 3");
+    expect(mode.textContent).toBe("Paged");
+  });
+
+  test("the page region is keyboard reachable without pointer input", async () => {
+    const enhanced = await startedReader(LTR_UNIT);
+    const stage = enhanced.document.querySelector<HTMLElement>(".yar-stage")!;
+    stage.focus();
+    stage.dispatchEvent(
+      new enhanced.window.KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true, cancelable: true }),
+    );
+    expect(enhanced.document.querySelector(".yar-counter")?.textContent).toBe("2 / 3");
+  });
+
   test("the page control jumps directly to a requested page", async () => {
     const enhanced = await startedReader(LTR_UNIT);
     const jump = enhanced.document.querySelector<HTMLInputElement>("input.yar-jump")!;
@@ -323,14 +379,8 @@ describe("reader module", () => {
     expect(enhanced.document.querySelector(".yar-error h1")?.textContent).toBe("This unit is not in the catalog");
   });
 
-  test("every reader control is keyboard operable", async () => {
+  test("every reader action is keyboard reachable and named", async () => {
     const { document } = await startedReader(LTR_UNIT);
-    /*
-     * `yar-stage` carries the pointer-only tap zones: the left third, right
-     * third and centre of the page area. Each one repeats an action that the
-     * keyboard tests above already drive, so it is a redundant affordance
-     * rather than a control that only a pointer can reach.
-     */
-    assertKeyboardOperable(document.querySelector(".yar-app")!, ["yar-stage"]);
+    assertKeyboardOperable(document.querySelector(".yar-app")!);
   });
 });

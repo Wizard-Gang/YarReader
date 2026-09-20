@@ -81,6 +81,14 @@ describe("browser asset inventory", () => {
     expect(files.filter((file) => file.endsWith("/index.html"))).toHaveLength(unitPaths.length);
   });
 
+  test("viewer CSS carries explicit keyboard focus and non-color active-state cues", async () => {
+    const css = (
+      await Promise.all(viewerAssets.styles.map((asset) => readFile(path.join(fixture.root, asset), "utf8")))
+    ).join("\n");
+    expect(css).toContain(":focus-visible");
+    expect(css).toContain("text-decoration:underline");
+  });
+
   test("every shipped viewer asset is byte-identical to its Vite build output", async () => {
     for (const asset of viewerAssets.files) {
       const shipped = await readFile(path.join(fixture.root, asset));

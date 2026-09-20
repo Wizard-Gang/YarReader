@@ -191,13 +191,21 @@
     };
 
     mount.innerHTML = "";
+    mount.setAttribute("aria-labelledby", "yar-reader-heading");
     document.title = item.series + " - " + (item.title || pad4(item.sequence));
 
     var app = el("div", "yar-app");
     var top = el("header", "yar-bar yar-bar-top");
     var stage = el("div", "yar-stage");
+    stage.setAttribute("role", "region");
+    stage.setAttribute("aria-label", "Reader pages");
+    stage.setAttribute("tabindex", "0");
+    stage.setAttribute("aria-keyshortcuts", "ArrowLeft ArrowRight ArrowUp ArrowDown PageUp PageDown Space Home End");
     var bottom = el("footer", "yar-bar yar-bar-bottom");
     var toast = el("div", "yar-toast");
+    toast.setAttribute("role", "status");
+    toast.setAttribute("aria-live", "polite");
+    toast.setAttribute("aria-atomic", "true");
 
     app.appendChild(top);
     app.appendChild(stage);
@@ -213,32 +221,39 @@
 
     var titleBox = el("div", "yar-title");
     var seriesLine = el("span", "yar-title-series", item.series);
-    var unitLine = el("span", "yar-title-unit", item.title || "Unit " + pad4(item.sequence));
+    var unitLine = el("h1", "yar-title-unit", item.title || "Unit " + pad4(item.sequence));
+    unitLine.id = "yar-reader-heading";
     titleBox.appendChild(seriesLine);
     titleBox.appendChild(unitLine);
 
     var modeButton = el("button", "yar-btn", "");
     modeButton.setAttribute("type", "button");
     modeButton.setAttribute("title", "Reading mode (m)");
+    modeButton.setAttribute("aria-label", "Reading mode");
 
     var directionButton = el("button", "yar-btn", "");
     directionButton.setAttribute("type", "button");
     directionButton.setAttribute("title", "Reading direction (d)");
+    directionButton.setAttribute("aria-label", "Reading direction");
 
     var fitButton = el("button", "yar-btn", "");
     fitButton.setAttribute("type", "button");
     fitButton.setAttribute("title", "Fit mode (w / p)");
+    fitButton.setAttribute("aria-label", "Fit mode");
 
     var zoomOut = el("button", "yar-btn yar-btn-icon", "-");
     zoomOut.setAttribute("type", "button");
     zoomOut.setAttribute("title", "Zoom out");
+    zoomOut.setAttribute("aria-label", "Zoom out");
     var zoomIn = el("button", "yar-btn yar-btn-icon", "+");
     zoomIn.setAttribute("type", "button");
     zoomIn.setAttribute("title", "Zoom in");
+    zoomIn.setAttribute("aria-label", "Zoom in");
 
     var fullscreenButton = el("button", "yar-btn", "Full");
     fullscreenButton.setAttribute("type", "button");
     fullscreenButton.setAttribute("title", "Fullscreen (f)");
+    fullscreenButton.setAttribute("aria-label", "Toggle fullscreen");
 
     top.appendChild(libraryLink);
     top.appendChild(titleBox);
@@ -255,8 +270,10 @@
 
     var prevButton = el("button", "yar-btn yar-btn-nav", "Prev");
     prevButton.setAttribute("type", "button");
+    prevButton.setAttribute("aria-label", "Previous page");
     var nextButton = el("button", "yar-btn yar-btn-nav", "Next");
     nextButton.setAttribute("type", "button");
+    nextButton.setAttribute("aria-label", "Next page");
 
     var slider = el("input", "yar-slider") as HTMLInputElement;
     slider.type = "range";
@@ -266,6 +283,9 @@
     slider.setAttribute("aria-label", "Jump to page");
 
     var counter = el("span", "yar-counter", "");
+    counter.setAttribute("role", "status");
+    counter.setAttribute("aria-live", "polite");
+    counter.setAttribute("aria-atomic", "true");
 
     var jump = el("input", "yar-jump") as HTMLInputElement;
     jump.type = "number";
@@ -355,6 +375,14 @@
       app.setAttribute("data-fit", state.fit);
       app.setAttribute("data-zoom", String(Math.round(state.zoom * 100)));
       fitButton.textContent = state.fit === "width" ? "Fit width" : state.fit === "page" ? "Fit page" : "Zoom " + Math.round(state.zoom * 100) + "%";
+      fitButton.setAttribute(
+        "aria-label",
+        state.fit === "width"
+          ? "Fit mode: width"
+          : state.fit === "page"
+            ? "Fit mode: page"
+            : "Fit mode: zoom " + Math.round(state.zoom * 100) + " percent",
+      );
     }
 
     function paintChrome(): void {
@@ -362,7 +390,23 @@
       app.setAttribute("data-direction", state.direction);
       app.className = "yar-app" + (state.chromeHidden ? " yar-chrome-hidden" : "");
       modeButton.textContent = state.mode === "paged" ? "Paged" : state.mode === "spread" ? "Spread" : "Scroll";
+      modeButton.setAttribute("aria-label", "Reading mode: " + modeButton.textContent);
       directionButton.textContent = state.direction === "rtl" ? "RTL" : "LTR";
+      directionButton.setAttribute(
+        "aria-label",
+        "Reading direction: " + (state.direction === "rtl" ? "right to left" : "left to right"),
+      );
+      if (state.chromeHidden) {
+        top.setAttribute("aria-hidden", "true");
+        bottom.setAttribute("aria-hidden", "true");
+        top.setAttribute("inert", "");
+        bottom.setAttribute("inert", "");
+      } else {
+        top.removeAttribute("aria-hidden");
+        bottom.removeAttribute("aria-hidden");
+        top.removeAttribute("inert");
+        bottom.removeAttribute("inert");
+      }
       applyFit();
     }
 
@@ -370,6 +414,7 @@
       var current = Math.min(state.index + 1, pageSources.length);
       counter.textContent = current + " / " + pageSources.length;
       slider.value = String(current);
+      slider.setAttribute("aria-valuetext", "Page " + current + " of " + pageSources.length);
       if (document.activeElement !== jump) jump.value = String(current);
     }
 
@@ -569,8 +614,12 @@
 
     document.addEventListener("keydown", function (event) {
       if (event.defaultPrevented) return;
-      var target = event.target as HTMLElement | null;
-      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT")) return;
+      var target = event.target;
+      if (event.altKey || event.ctrlKey || event.metaKey) return;
+      if (
+        target instanceof HTMLElement &&
+        (target.matches("input, textarea, select, button, a[href]") || target.isContentEditable)
+      ) return;
 
       switch (event.key) {
         case "ArrowLeft":

@@ -42,6 +42,11 @@ npm run check
 git diff --check
 ```
 
+Browser/presentation changes also preserve the automated Vitest DOM accessibility
+acceptance boundary. The small set of checks that require actual browser or
+assistive-technology rendering is documented in `docs/ACCESSIBILITY.md`.
+YarReader's posture is WCAG 2.2 aligned and explicitly uncertified.
+
 Do not commit runtime media, catalogs, generated work or exports, downloaded
 covers, credentials, private URLs, or a real series-curation inventory.
 Published release tags are immutable. Reverts and corrections move forward

@@ -45,3 +45,16 @@ a {
   height: auto;
   margin: 0 auto;
 }
+
+
+a:focus-visible {
+  outline: 3px solid #9bd;
+  outline-offset: 2px;
+}
+
+.yar-static-reader-title {
+  display: inline;
+  margin: 0;
+  font: inherit;
+  font-weight: 700;
+}

@@ -212,6 +212,7 @@
     search.setAttribute("aria-label", "Search the library");
 
     var sortSelect = el("select", "yar-select") as HTMLSelectElement;
+    sortSelect.setAttribute("aria-label", "Sort library");
     var sortOptions: { key: SortKey; label: string }[] = [
       { key: "alphabetical", label: "Alphabetical" },
       { key: "sequence", label: "Sequence" },
@@ -232,6 +233,8 @@
     var filterBar = el("section", "yar-filter-bar");
     filterBar.setAttribute("aria-label", "Library filters");
     var formatFilters = el("div", "yar-format-filters");
+    formatFilters.setAttribute("role", "group");
+    formatFilters.setAttribute("aria-label", "Reading format");
     var genreLabel = el("label", "yar-filter-label", "Genre");
     var genreSelect = el("select", "yar-select yar-genre-select") as HTMLSelectElement;
     genreSelect.setAttribute("aria-label", "Filter by genre");
@@ -259,7 +262,10 @@
     filterBar.appendChild(genreLabel);
 
     var tabs = el("nav", "yar-tabs");
+    tabs.setAttribute("aria-label", "Library views");
     var activeChips = el("div", "yar-active-filters");
+    activeChips.setAttribute("role", "group");
+    activeChips.setAttribute("aria-label", "Active filters");
     var results = el("div", "yar-results");
     var unitLimit = UNIT_PAGE_SIZE;
     var lastDrawKey = "";
@@ -300,9 +306,12 @@
         image.setAttribute("decoding", "async");
         art.appendChild(image);
       } else {
-        art.appendChild(el("div", "yar-card-placeholder", item.series.slice(0, 2).toUpperCase()));
+        var placeholder = el("div", "yar-card-placeholder", item.series.slice(0, 2).toUpperCase());
+        placeholder.setAttribute("aria-hidden", "true");
+        art.appendChild(placeholder);
       }
       var badge = el("span", "yar-card-badge", pad4(item.sequence));
+      badge.setAttribute("aria-hidden", "true");
       art.appendChild(badge);
       card.appendChild(art);
 
@@ -342,9 +351,13 @@
         image.setAttribute("decoding", "async");
         art.appendChild(image);
       } else {
-        art.appendChild(el("div", "yar-card-placeholder", first.series.slice(0, 2).toUpperCase()));
+        var placeholder = el("div", "yar-card-placeholder", first.series.slice(0, 2).toUpperCase());
+        placeholder.setAttribute("aria-hidden", "true");
+        art.appendChild(placeholder);
       }
-      art.appendChild(el("span", "yar-card-badge", String(items.length)));
+      var badge = el("span", "yar-card-badge", String(items.length));
+      badge.setAttribute("aria-hidden", "true");
+      art.appendChild(badge);
       card.appendChild(art);
 
       var body = el("div", "yar-card-body");
@@ -380,8 +393,10 @@
       tabs.innerHTML = "";
       for (var i = 0; i < VIEWS.length; i += 1) {
         (function (view) {
-          var button = el("button", "yar-tab" + (state.view === view.key ? " yar-tab-on" : ""), view.label);
+          var active = state.view === view.key;
+          var button = el("button", "yar-tab" + (active ? " yar-tab-on" : ""), view.label);
           button.setAttribute("type", "button");
+          button.setAttribute("aria-pressed", active ? "true" : "false");
           button.onclick = function () {
             state.view = view.key;
             writeHash(state);
@@ -405,8 +420,11 @@
           var chip = el("button", "yar-chip yar-chip-active");
           chip.setAttribute("type", "button");
           var visibleValue = k === "format" ? formatLabel(v as YarReadingMode) : v;
+          chip.setAttribute("aria-label", "Remove " + k + " filter: " + visibleValue);
           chip.appendChild(el("span", "yar-chip-label", k + ": " + visibleValue));
-          chip.appendChild(el("span", "yar-chip-count", "x"));
+          var removeMark = el("span", "yar-chip-count", "x");
+          removeMark.setAttribute("aria-hidden", "true");
+          chip.appendChild(removeMark);
           chip.onclick = function () {
             state.filters[k] = "";
             if (k === "query") search.value = "";
@@ -496,6 +514,9 @@
         var noun = state.view === "series" ? " series" : visible.length === 1 ? " chapter" : " chapters";
         var label = state.view === "all" && shown < visible.length ? shown + " of " + visible.length + noun : shown + noun;
         var summary = el("p", "yar-result-count", label);
+        summary.setAttribute("role", "status");
+        summary.setAttribute("aria-live", "polite");
+        summary.setAttribute("aria-atomic", "true");
         results.insertBefore(summary, results.firstChild);
       }
     }
