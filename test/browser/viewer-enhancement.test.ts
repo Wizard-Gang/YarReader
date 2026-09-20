@@ -1,7 +1,7 @@
 /*
  * Behavioural baseline for the shipped first-party viewer modules.
  *
- * These run the real `library.js` and `reader.js` the exporter publishes,
+ * These run the real Vite viewer bundle the exporter publishes,
  * against the synthetic portable documents, so a later build or presentation
  * change has something concrete to be compared against.
  */
@@ -29,14 +29,14 @@ afterEach(() => { while (open.length) open.pop()!.close(); });
 afterAll(async () => fixture?.cleanup());
 
 async function startedLibrary(): Promise<EnhancedDocument> {
-  const enhanced = await enhancedDocument(fixture.root, fixture.indexHtml, "library.js");
+  const enhanced = await enhancedDocument(fixture.root, fixture.indexHtml);
   open.push(enhanced);
   libraryModule(enhanced.window).start({ root: "./", label: "YarReader" });
   return enhanced;
 }
 
 async function startedReader(unitPath: string): Promise<EnhancedDocument> {
-  const enhanced = await enhancedDocument(fixture.root, path.join(fixture.root, unitPath, "index.html"), "reader.js");
+  const enhanced = await enhancedDocument(fixture.root, path.join(fixture.root, unitPath, "index.html"));
   open.push(enhanced);
   readerModule(enhanced.window).start({ path: unitPath, root: UNIT_ROOT });
   return enhanced;
@@ -72,7 +72,7 @@ function assertKeyboardOperable(container: Element, pointerOnly: readonly string
 
 describe("library module", () => {
   test("publishes both documented entry points", async () => {
-    const enhanced = await enhancedDocument(fixture.root, fixture.indexHtml, "library.js");
+    const enhanced = await enhancedDocument(fixture.root, fixture.indexHtml);
     open.push(enhanced);
     const globals = enhanced.window as unknown as Record<string, { start?: unknown }>;
     expect(typeof globals.ComicLibrary?.start).toBe("function");
@@ -81,7 +81,7 @@ describe("library module", () => {
   });
 
   test("reads the catalog that the export generated", async () => {
-    const enhanced = await enhancedDocument(fixture.root, fixture.indexHtml, "library.js");
+    const enhanced = await enhancedDocument(fixture.root, fixture.indexHtml);
     open.push(enhanced);
     const catalog = (enhanced.window as unknown as { COMIC_LIBRARY: { itemCount: number; items: unknown[] } }).COMIC_LIBRARY;
     expect(catalog.itemCount).toBe(fixture.units);
@@ -166,7 +166,7 @@ describe("library module", () => {
   });
 
   test("the reader-facing globals stay separate objects sharing one entry point", async () => {
-    const enhanced = await enhancedDocument(fixture.root, fixture.indexHtml, "library.js");
+    const enhanced = await enhancedDocument(fixture.root, fixture.indexHtml);
     open.push(enhanced);
     const globals = enhanced.window as unknown as Record<string, unknown>;
     expect(globals.YarLibrary).not.toBe(globals.ComicLibrary);
@@ -175,7 +175,7 @@ describe("library module", () => {
 
 describe("reader module", () => {
   test("publishes both documented entry points", async () => {
-    const enhanced = await enhancedDocument(fixture.root, path.join(fixture.root, LTR_UNIT, "index.html"), "reader.js");
+    const enhanced = await enhancedDocument(fixture.root, path.join(fixture.root, LTR_UNIT, "index.html"));
     open.push(enhanced);
     const globals = enhanced.window as unknown as Record<string, { start?: unknown }>;
     expect(typeof globals.ComicReader?.start).toBe("function");
@@ -308,7 +308,7 @@ describe("reader module", () => {
   });
 
   test("an unknown unit path reports a catalog error instead of rendering", async () => {
-    const enhanced = await enhancedDocument(fixture.root, path.join(fixture.root, LTR_UNIT, "index.html"), "reader.js");
+    const enhanced = await enhancedDocument(fixture.root, path.join(fixture.root, LTR_UNIT, "index.html"));
     open.push(enhanced);
     readerModule(enhanced.window).start({ path: "library/not-a-real-unit/issue-9999/", root: UNIT_ROOT });
     expect(enhanced.document.querySelector(".yar-error h1")?.textContent).toBe("This unit is not in the catalog");

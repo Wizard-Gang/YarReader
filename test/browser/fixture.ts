@@ -27,6 +27,33 @@ import { createBundleFromFiles } from "../../dist/src/zip.js";
 /* Vitest runs from the repository root, which is this config's project root. */
 const REPOSITORY_ROOT = process.cwd();
 
+interface ViteManifestEntry {
+  readonly file: string;
+  readonly css?: readonly string[];
+  readonly assets?: readonly string[];
+  readonly isEntry?: boolean;
+}
+
+export interface ViewerBuildAssets {
+  readonly script: string;
+  readonly styles: readonly string[];
+  readonly files: readonly string[];
+}
+
+export async function viewerBuildAssets(): Promise<ViewerBuildAssets> {
+  const manifest = JSON.parse(
+    await readFile(path.join(REPOSITORY_ROOT, "dist", "viewer", "manifest.json"), "utf8"),
+  ) as Record<string, ViteManifestEntry>;
+  const entry = manifest["src/viewer/entry.ts"] ?? Object.values(manifest).find((candidate) => candidate.isEntry === true);
+  if (!entry) throw new Error("dist/viewer/manifest.json has no viewer entry");
+  const styles = [...new Set([
+    ...(entry.css ?? []),
+    ...Object.values(manifest).map((candidate) => candidate.file).filter((file) => file.endsWith(".css")),
+  ])];
+  const files = [...new Set([entry.file, ...styles, ...(entry.assets ?? [])])];
+  return { script: entry.file, styles, files };
+}
+
 /** One synthetic series in the fixture library. */
 export interface FixtureSeries {
   readonly series: string;
@@ -176,7 +203,6 @@ export interface EnhancedDocument {
 export async function enhancedDocument(
   fixtureRoot: string,
   file: string,
-  viewerScript: "library.js" | "reader.js",
 ): Promise<EnhancedDocument> {
   const dom = new JSDOM(await readFile(file, "utf8"), {
     url: pathToFileURL(file).href,
@@ -184,7 +210,8 @@ export async function enhancedDocument(
     pretendToBeVisual: true,
   });
   dom.window.eval(await readFile(path.join(fixtureRoot, "catalog.js"), "utf8"));
-  dom.window.eval(await readFile(path.join(fixtureRoot, viewerScript), "utf8"));
+  const viewer = await viewerBuildAssets();
+  dom.window.eval(await readFile(path.join(fixtureRoot, viewer.script), "utf8"));
   return { window: dom.window, document: dom.window.document, close: () => dom.window.close() };
 }
 
@@ -196,14 +223,14 @@ export interface ReaderStartOptions { path?: string; root?: string; mount?: stri
 /** The library module the export publishes, as the generated document calls it. */
 export function libraryModule(window: DOMWindow): { start(options?: LibraryStartOptions): void } {
   const found = (window as unknown as { ComicLibrary?: { start(options?: LibraryStartOptions): void } }).ComicLibrary;
-  if (!found) throw new Error("library.js did not publish its start entry point");
+  if (!found) throw new Error("viewer bundle did not publish its library start entry point");
   return found;
 }
 
 /** The reader module the export publishes, as the generated document calls it. */
 export function readerModule(window: DOMWindow): { start(options?: ReaderStartOptions): void } {
   const found = (window as unknown as { ComicReader?: { start(options?: ReaderStartOptions): void } }).ComicReader;
-  if (!found) throw new Error("reader.js did not publish its start entry point");
+  if (!found) throw new Error("viewer bundle did not publish its reader start entry point");
   return found;
 }
 
@@ -241,7 +268,6 @@ export interface TrappedDocument extends EnhancedDocument {
 export async function networkTrappedDocument(
   fixtureRoot: string,
   file: string,
-  viewerScript: "library.js" | "reader.js",
 ): Promise<TrappedDocument> {
   const dom = new JSDOM(await readFile(file, "utf8"), {
     url: pathToFileURL(file).href,
@@ -265,7 +291,8 @@ export async function networkTrappedDocument(
     }
   }
   dom.window.eval(await readFile(path.join(fixtureRoot, "catalog.js"), "utf8"));
-  dom.window.eval(await readFile(path.join(fixtureRoot, viewerScript), "utf8"));
+  const viewer = await viewerBuildAssets();
+  dom.window.eval(await readFile(path.join(fixtureRoot, viewer.script), "utf8"));
   return { window: dom.window, document: dom.window.document, close: () => dom.window.close(), networkCalls };
 }
 
