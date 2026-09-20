@@ -4,7 +4,7 @@ Status: **Active**
 
 Scope: streamline YarReader around the published WG-ARCH-001 repository baseline while preserving its defining product boundary: a local crash-recoverable ingestion/archive CLI that emits a self-contained offline reader which works from `file://`.
 
-This file is the active planning source of truth for YR-042 through YR-053. Executable source, `ARCHITECTURE.md`, current policy documents, and released interfaces remain authoritative for shipped behavior. This plan contains only current and future work. Merged task blocks are removed instead of being retained as a completed-task ledger. YR-053 retires this plan after the durable rules have moved into their permanent authorities.
+This file is the active planning source of truth for YR-044 through YR-053. Executable source, `ARCHITECTURE.md`, current policy documents, and released interfaces remain authoritative for shipped behavior. This plan contains only current and future work. Merged task blocks are removed instead of being retained as a completed-task ledger. YR-053 retires this plan after the durable rules have moved into their permanent authorities.
 
 ## Context
 
@@ -23,7 +23,6 @@ Current-state observations:
 | Historical documentation | reconstruction narrative plus `docs/history/**` duplicate superseded repository/release state that Git/GitHub already retain |
 | GitHub merge policy | classic `main` protection exists and requires `verify` and `change-id`; repository rulesets are absent |
 | Merge methods | merge commits disabled; squash and rebase enabled; merged branches are deleted |
-| Automation drift | Dependabot PR #6 is open without a controlled YR identity even though version-update PR automation is not part of the current controlled process |
 
 ## Plan maintenance
 
@@ -96,10 +95,6 @@ The repository has no rulesets. Merge commits are disabled while squash and reba
 
 `docs/RECONSTRUCTION.md` and `docs/history/**` narrate superseded implementation/publication state. That information is already available from immutable Git/GitHub history and should not stay as a second authority.
 
-### F10 — Controlled dependency flow has residual automation drift
-
-Dependabot PR #6 has no permanent YR ID and therefore cannot enter the controlled history as-is. The repository needs one deliberate dependency-update path consistent with its ID discipline.
-
 ### F11 — The permanent architecture does not yet state the §27 exception
 
 `ARCHITECTURE.md` accurately describes an offline static reader, but it does not explicitly state why Cloudflare/Workers deployment rules are not applicable or which parts of the browser baseline are still required.
@@ -112,24 +107,6 @@ The README still presents `typecheck` and `test` separately as the normal verifi
 
 Changes are sequential. The first task below is the current default assignment. Do not consume a later reserved YR ID before the prior change is merged unless the owner explicitly changes the plan.
 
-### YR-042 — OPS — Establish repository settings contract
-
-- add `config/github-repository-settings.json` with the expected default branch, merge methods, branch deletion, required checks, and tag policy;
-- add `npm run verify:github-settings` as the provider-aware verification command, intentionally outside credential-free `npm run check`;
-- close or supersede uncontrolled dependency PRs rather than merging commits without permanent YR identities;
-- update `AGENTS.md`, `CONTRIBUTING.md`, and this plan so open plan work is selected first, future scope is maintained during delivery, and merged task blocks are purged instead of retained as history;
-- change no repository-admin setting in this task; YR-043 applies the committed contract through an administration-capable session.
-
-Closes F10 and establishes the executable contract for F8.
-
-### YR-043 — OPS — Formalize continuous plan execution
-
-- add the explicit `do needful` directive to `AGENTS.md` so the owner can resume the first open planned task without providing a separately numbered prompt;
-- require current-main reconciliation, ready-PR merge-first behavior, merged-task/resolved-finding purge, first-open-task selection, full delivery-loop completion, and next-task prompt handoff;
-- keep the directive honest about unavailable provider/admin capabilities rather than treating a blocker as completed work;
-- keep this active plan current/future-only and update the remaining sequence so the blocked live GitHub administration work remains the next open task;
-- change no runtime, dependency, release, or live provider setting in this change.
-
 ### YR-044 — OPS — Apply GitHub repository settings
 
 - record the live GitHub settings before mutation;
@@ -139,7 +116,8 @@ Closes F10 and establishes the executable contract for F8.
 - enable merge commits only; disable squash and rebase; retain automatic deletion of merged branches;
 - run `npm run verify:github-settings` against the live repository and require it to pass;
 - record the live settings after mutation;
-- use an administration-capable GitHub session/CLI/API; do not merge this task until the provider mutation and verification actually occur.
+- use an administration-capable GitHub session/CLI/API; read-only connector access is insufficient for this task;
+- do not merge this task until the provider mutation and verification actually occur.
 
 Closes F8.
 
@@ -228,7 +206,7 @@ Closes F9, F11, and F12.
 
 ### YR-053 — BUILD — Prepare normalized v1.1.0 release
 
-After YR-042 through YR-052 are merged and green:
+After YR-044 through YR-052 are merged and green:
 
 - set `package.json` to 1.1.0 and reproduce the final release candidate from a clean checkout;
 - move every durable rule from this plan into `AGENTS.md`, `ARCHITECTURE.md`, `CONTRIBUTING.md`, or the relevant current policy document;
