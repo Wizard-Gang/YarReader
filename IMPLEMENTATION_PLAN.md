@@ -4,7 +4,7 @@ Status: **Active**
 
 Scope: streamline YarReader around the published WG-ARCH-001 repository baseline while preserving its defining product boundary: a local crash-recoverable ingestion/archive CLI that emits a self-contained offline reader which works from `file://`.
 
-This file is the active planning source of truth for YR-044 through YR-053. Executable source, `ARCHITECTURE.md`, current policy documents, and released interfaces remain authoritative for shipped behavior. This plan contains only current and future work. Merged task blocks are removed instead of being retained as a completed-task ledger. YR-053 retires this plan after the durable rules have moved into their permanent authorities.
+This file is the active planning source of truth for YR-045 through YR-053. Executable source, `ARCHITECTURE.md`, current policy documents, and released interfaces remain authoritative for shipped behavior. This plan contains only current and future work. Merged task blocks are removed instead of being retained as a completed-task ledger. YR-053 retires this plan after the durable rules have moved into their permanent authorities.
 
 ## Context
 
@@ -21,8 +21,7 @@ Current-state observations:
 | Release history | ten checked-in files under `docs/releases/`; `release.yml` reads them to publish GitHub Releases |
 | Current released version | `package.json` 1.0.1 with GitHub Releases through v1.0.1 |
 | Historical documentation | reconstruction narrative plus `docs/history/**` duplicate superseded repository/release state that Git/GitHub already retain |
-| GitHub merge policy | classic `main` protection exists and requires `verify` and `change-id`; repository rulesets are absent |
-| Merge methods | merge commits disabled; squash and rebase enabled; merged branches are deleted |
+| GitHub settings | active `main` and `v*` rulesets match `config/github-repository-settings.json`; merge commits are the only merge method; merged branches are deleted |
 
 ## Plan maintenance
 
@@ -87,10 +86,6 @@ The repository uses `node:test` for all tests. That remains appropriate for pipe
 
 The workflow verifies that a tag is annotated, but it does not require the checked-out `package.json` version to equal the semantic tag and still sources notes from repository Markdown.
 
-### F8 — GitHub repository settings do not match the baseline
-
-The repository has no rulesets. Merge commits are disabled while squash and rebase are enabled. The baseline requires a protected `main` ruleset, immutable `v*` tags, merge commits only, and committed expected settings.
-
 ### F9 — Reconstruction-era documentation remains in the current tree
 
 `docs/RECONSTRUCTION.md` and `docs/history/**` narrate superseded implementation/publication state. That information is already available from immutable Git/GitHub history and should not stay as a second authority.
@@ -107,20 +102,6 @@ The README still presents `typecheck` and `test` separately as the normal verifi
 
 Changes are sequential. The first task below is the current default assignment. Do not consume a later reserved YR ID before the prior change is merged unless the owner explicitly changes the plan.
 
-### YR-044 — OPS — Apply GitHub repository settings
-
-- record the live GitHub settings before mutation;
-- apply the committed contract from `config/github-repository-settings.json`;
-- replace classic-only protection with a `main` ruleset that requires pull requests plus `verify` and `change-id`, and blocks force pushes and deletion;
-- add a `v*` tag ruleset that blocks tag update and deletion;
-- enable merge commits only; disable squash and rebase; retain automatic deletion of merged branches;
-- run `npm run verify:github-settings` against the live repository and require it to pass;
-- record the live settings after mutation;
-- use an administration-capable GitHub session/CLI/API; read-only connector access is insufficient for this task;
-- do not merge this task until the provider mutation and verification actually occur.
-
-Closes F8.
-
 ### YR-045 — TEST — Capture portable-reader acceptance baseline
 
 - add Vitest 5 and a DOM implementation only for browser/presentation tests;
@@ -128,6 +109,7 @@ Closes F8.
 - generate a synthetic portable library fixture with no real media or curation data;
 - capture semantic acceptance for the library index and one unit reader: complete static links/images, document metadata, controls, reading modes, filtering hooks, keyboard-operable actions, asset inventory, and no network/runtime API dependency;
 - exercise the current first-party viewer modules against the synthetic DOM so later build/presentation changes have a behavioral baseline;
+- repair `scripts/check-controlled-history.mjs` so it enumerates controlled commits only, now that merge-commit-only merging puts merge commits on `main`;
 - change no production behavior.
 
 Closes F5.
@@ -206,7 +188,7 @@ Closes F9, F11, and F12.
 
 ### YR-053 — BUILD — Prepare normalized v1.1.0 release
 
-After YR-044 through YR-052 are merged and green:
+After YR-045 through YR-052 are merged and green:
 
 - set `package.json` to 1.1.0 and reproduce the final release candidate from a clean checkout;
 - move every durable rule from this plan into `AGENTS.md`, `ARCHITECTURE.md`, `CONTRIBUTING.md`, or the relevant current policy document;

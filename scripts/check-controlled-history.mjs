@@ -1,11 +1,16 @@
 import { execFileSync } from "node:child_process";
 
-const raw = execFileSync("git", ["log", "--reverse", "--format=%H%x1f%s%x1f%b%x1e"], { encoding: "utf8" });
+/*
+ * Enumerate only controlled commits, parents before children.
+ *
+ * `main` is merged with merge commits, so history now contains merge commits
+ * that are not themselves controlled changes: the pull-request merge on `main`
+ * and the synthetic merge a pull-request CI checkout creates. `--no-merges`
+ * drops both, and `--topo-order` keeps the remaining controlled commits in
+ * their real sequence rather than in commit-timestamp order.
+ */
+const raw = execFileSync("git", ["log", "--reverse", "--topo-order", "--no-merges", "--format=%H%x1f%s%x1f%b%x1e"], { encoding: "utf8" });
 const records = raw.split("\x1e").map((record) => record.trim()).filter(Boolean);
-if (process.env.GITHUB_EVENT_NAME === "pull_request") {
-  const subject = records.at(-1)?.split("\x1f")[1] ?? "";
-  if (/^Merge [0-9a-f]+ into [0-9a-f]+$/.test(subject)) records.pop();
-}
 
 const currentTypes = new Set([
   "INIT",

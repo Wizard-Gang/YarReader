@@ -3,19 +3,15 @@
     "target": "ES2024",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "lib": ["ES2024", "DOM"],
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
     "types": ["node"],
-    "rootDir": ".",
-    "outDir": "dist",
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
     "verbatimModuleSyntax": true,
-    "declaration": true,
-    "sourceMap": true,
+    "noEmit": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src/**/*.ts", "test/**/*.ts"],
-  "exclude": ["src/viewer/**/*", "test/browser/**/*"]
+  "include": ["test/browser/**/*.ts", "vitest.config.ts"]
 }
