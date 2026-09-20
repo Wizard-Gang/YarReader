@@ -23,10 +23,11 @@ New controlled titles use one primary type from the WG-ARCH-001 §16 vocabulary:
 `OPS` or `BUILD` for new automation work.
 
 Every controlled change body records `Change`, `Reason`, `Impact`, `Risk`,
-`Controls`, `Validation`, `Evidence`, `Source`, and `Release`. Include
-`Rollback` for persistence, migration, archive, activation, schema, or other
-high-risk changes. A corrective change identifies the earlier change in its
-notes or a `Corrects:` trailer.
+`Controls`, `Validation`, `Evidence`, `Source`, and `Release`. `Source` names
+current authority/input for the change rather than a reconstruction mapping.
+Include `Rollback` for persistence, migration, archive, activation, schema,
+provider-setting, release-behavior, or other high-risk changes. A corrective
+change identifies the earlier change in its notes or a `Corrects:` trailer.
 
 Provider-aware GitHub repository settings are verified separately from credential-free `npm run check`:
 
@@ -39,6 +40,7 @@ Before opening a pull request, run:
 ```sh
 npm ci
 npm run check
+npm run build
 git diff --check
 ```
 
@@ -49,5 +51,6 @@ YarReader's posture is WCAG 2.2 aligned and explicitly uncertified.
 
 Do not commit runtime media, catalogs, generated work or exports, downloaded
 covers, credentials, private URLs, or a real series-curation inventory.
-Published release tags are immutable. Reverts and corrections move forward
-under new YR IDs.
+Git/GitHub retain superseded repository and release history; do not add a
+parallel current-tree history ledger. Published release tags are immutable.
+Reverts and corrections move forward under new YR IDs.

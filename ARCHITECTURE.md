@@ -19,6 +19,26 @@ acquire/manual drop
   -> atomic generation activation
 ```
 
+## WG-ARCH-001 §27 offline-reader exception
+
+YarReader permanently uses the WG-ARCH-001 §27 offline-reader exception. Its
+production artifact is the local CLI plus a portable static directory, not a
+hosted application. Cloudflare Workers, Wrangler, server runtimes, production
+environment selectors, hosted deployment workflows, and runtime network
+dependencies are therefore outside the product boundary.
+
+The shared browser baseline still applies where it fits this product: React 19
+renders complete portable documents at export time with `renderToStaticMarkup`;
+Vite 8 owns strict browser TypeScript/CSS builds and manifest-addressed,
+content-hashed assets; static HTML, navigation, and page images remain complete
+without JavaScript; and the external first-party viewer only progressively
+enhances that markup. There is no `createRoot`, `hydrateRoot`, hydration,
+client-side router, or browser network API. Portable output keeps the enforced
+file-compatible CSP with no `unsafe-inline`.
+
+`npm run dev` is a local-only synthetic viewer preview. `npm run build` is
+deterministic and deployment-free.
+
 ## Boundaries
 
 - `src/paths.ts` is the only runtime path authority. It rejects repository

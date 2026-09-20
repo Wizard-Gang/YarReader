@@ -23,8 +23,17 @@ yar --workspace /path/to/media update --stable-seconds 0
 ## Verify
 
 ```bash
-npm run typecheck
-npm test
+npm ci
+npm run check
+npm run build
+git diff --check
+```
+
+`npm run check` is the credential-free repository acceptance gate. Provider-aware
+GitHub settings verification is separate:
+
+```bash
+npm run verify:github-settings
 ```
 
 ## Structure
@@ -38,10 +47,16 @@ npm test
 ## Documentation
 
 - [Architecture](ARCHITECTURE.md)
+- [Contributing](CONTRIBUTING.md)
 - [Change management](docs/CHANGE-MANAGEMENT.md)
 - [Release management](docs/RELEASE-MANAGEMENT.md)
-- [Engineering record](docs/RECONSTRUCTION.md)
+- [Accessibility](docs/ACCESSIBILITY.md)
+
+Superseded repository states and release history are retained by Git and GitHub,
+not by a parallel current-tree history archive.
 
 ## Deployment
 
-YarReader does not deploy a server. `yar update` activates a verified static library generation, and `yar portable /path/to/destination` copies it into a self-contained directory for offline use.
+YarReader has no hosted production deployment. `yar update` activates a verified
+static library generation, and `yar portable /path/to/destination` copies it into
+a self-contained directory for offline use through `file://`.

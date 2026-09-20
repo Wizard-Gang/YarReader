@@ -3,22 +3,31 @@
 YarReader uses permanent `YR-###` identifiers and controlled commit titles:
 
 ```text
-[YR-040] [TYPE] Imperative title
+[YR-051] [TYPE] Imperative title
 ```
+
+Branches use `yr-###-imperative-summary`.
 
 New primary types follow the complete WG-ARCH-001 §16 vocabulary: `INIT`,
 `FEAT`, `FIX`, `SEC`, `API`, `A11Y`, `I18N`, `AI`, `DB`, `OPS`,
 `TEST`, `DOCS`, `REFACTOR`, `PERF`, `BUILD`, `REVERT`, and `CHORE`.
-One change has one primary type. The published YR-035 `CI` type remains valid
-as immutable history, but new automation changes use `OPS` or `BUILD`.
+The published YR-035 `CI` type remains valid only as immutable history; its exact
+exception is kept beside the executable history validator rather than repeated
+in a parallel documentation ledger.
 
-Branches use `yr-###-imperative-summary`.
+Every controlled change body records `Change`, `Reason`, `Impact`, `Risk`,
+`Controls`, `Validation`, `Evidence`, `Source`, and `Release`. `Risk`
+is `Low`, `Medium`, or `High`. Add `Rollback` when the change affects
+persistence, migration, archive, activation, schemas, provider settings, release
+behavior, or another high-risk boundary.
 
-Each commit body records the change, reason, impact boundary, Low/Medium/High
-risk, controls, validation actually performed, exact evidence, source
-provenance, and target release. High-risk persistence and filesystem changes
-also state rollback. A failed validation is never represented as successful.
+`Source` identifies the current authority or input used for the change, such as
+the current `main` commit and the active task, issue, or design decision. It is
+required evidence context, not a reconstruction-era source-commit mapping.
+`Evidence` records validation or repository/provider facts that actually
+support the change. A failed validation is never represented as successful.
 
-The reconstruction map in `docs/history/CHANGE-MAP.csv` connects each controlled
-change to the audited source commit. New work after v1.0.0 uses `direct` mapping
-to its own pull request and design evidence rather than historical provenance.
+Git and GitHub are the authority for superseded repository states, pull requests,
+workflow runs, tags, and Releases. Current-tree Markdown does not maintain a
+second reconstruction map, completed-change ledger, or release-history archive.
+Corrections move forward under new YR IDs; published history is not rewritten.
