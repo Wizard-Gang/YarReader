@@ -35,6 +35,9 @@ Provider-aware GitHub repository settings are verified separately from credentia
 npm run verify:github-settings
 ```
 
+Pipeline and filesystem tests remain on `node:test`; Vitest 5 owns tests that need
+TypeScript browser modules or a DOM. Keep that split when adding or moving tests.
+
 Before opening a pull request, run:
 
 ```sh

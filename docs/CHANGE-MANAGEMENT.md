@@ -27,6 +27,11 @@ required evidence context, not a reconstruction-era source-commit mapping.
 `Evidence` records validation or repository/provider facts that actually
 support the change. A failed validation is never represented as successful.
 
+Provider-setting changes are isolated controlled work: keep the expected state
+in `config/github-repository-settings.json`, capture live GitHub state before and
+after the change, and run `npm run verify:github-settings` with authorized admin
+credentials.
+
 Git and GitHub are the authority for superseded repository states, pull requests,
 workflow runs, tags, and Releases. Current-tree Markdown does not maintain a
 second reconstruction map, completed-change ledger, or release-history archive.
