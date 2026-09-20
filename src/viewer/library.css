@@ -203,6 +203,10 @@ body.yar-library-body {
   padding-bottom: 10px;
 }
 
+.yar-active-filters:empty {
+  display: none;
+}
+
 .yar-chip {
   appearance: none;
   display: inline-flex;

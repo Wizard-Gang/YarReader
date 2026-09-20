@@ -37,7 +37,12 @@ test("transactional export works without JavaScript and progressively enhances u
   assert.match(html, /<main\b[^>]*\bdata-library\b/);
   assert.ok(html.includes('<a href="library/fixture-series/issue-0001/index.html">'));
   assert.match(html, /class="yar-library-body"/);
-  assert.match(html, /ComicLibrary\.start/);
+  assert.doesNotMatch(html, /ComicLibrary\.start/);
+  assert.doesNotMatch(html, /<style\b/i);
+  assert.doesNotMatch(html, /<script\b(?![^>]*\bsrc=)/i);
+  assert.match(html, /http-equiv="Content-Security-Policy"/);
+  assert.match(html, /data-yar-start="library"/);
+  assert.match(html, /data-yar-root="\.\/"/);
   const viewerManifest = JSON.parse(await readFile(path.resolve("dist/viewer/manifest.json"), "utf8")) as Record<
     string,
     { file: string; css?: string[]; assets?: string[]; isEntry?: boolean }
@@ -69,10 +74,14 @@ test("transactional export works without JavaScript and progressively enhances u
   const leaf = await readFile(path.join(paths.activeExport, "library", ...unit.id.split("/"), "index.html"), "utf8");
   const rootPrefix = "../".repeat(unit.id.split("/").length + 1);
   assert.match(leaf, /class="yar-reader-body"/);
-  assert.match(leaf, /ComicReader\.start/);
+  assert.doesNotMatch(leaf, /ComicReader\.start/);
+  assert.doesNotMatch(leaf, /<style\b/i);
+  assert.doesNotMatch(leaf, /<script\b(?![^>]*\bsrc=)/i);
+  assert.match(leaf, /http-equiv="Content-Security-Policy"/);
+  assert.match(leaf, /data-yar-start="reader"/);
+  assert.ok(leaf.includes(`data-yar-root="${rootPrefix}"`));
   for (const style of viewerStyles) assert.ok(leaf.includes(`href="${rootPrefix}${style}"`));
   assert.ok(leaf.includes(`src="${rootPrefix}${viewerEntry.file}"`));
-  assert.ok(leaf.includes(`root: "${rootPrefix}"`));
   assert.equal(leaf.match(/<img\b/g)?.length, 2);
   assert.ok(leaf.includes('src="pages/000001.webp"'));
   assert.ok(leaf.includes('src="pages/000002.webp"'));

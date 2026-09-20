@@ -15,9 +15,7 @@ import {
   buildPortableFixture,
   inventory,
   TRAPPED_NETWORK_APIS,
-  libraryModule,
   networkTrappedDocument,
-  readerModule,
   staticDocument,
   type PortableFixture,
   type TrappedDocument,
@@ -183,7 +181,6 @@ describe("the enhanced viewer never reaches for a network API", () => {
     const enhanced = await networkTrappedDocument(fixture.root, path.join(fixture.root, unit, "index.html"));
     try {
       assertTrapArmed(enhanced);
-      readerModule(enhanced.window).start({ path: unit, root: "../../../" });
       expect(enhanced.document.querySelector(".yar-counter")?.textContent).toBe(`1 / ${FIXTURE_PAGE_COUNT}`);
 
       for (const key of ["ArrowDown", "ArrowDown", "ArrowUp", "End", "Home", "m", "m", "m", "d", "w", "p"]) {
@@ -203,7 +200,6 @@ describe("the enhanced viewer never reaches for a network API", () => {
     const enhanced = await networkTrappedDocument(fixture.root, fixture.indexHtml);
     try {
       assertTrapArmed(enhanced);
-      libraryModule(enhanced.window).start({ root: "./", label: "YarReader" });
       for (const tab of enhanced.document.querySelectorAll<HTMLButtonElement>("nav.yar-tabs button.yar-tab")) tab.click();
       for (const format of enhanced.document.querySelectorAll<HTMLButtonElement>("button.yar-format-button")) format.click();
       const clear = enhanced.document.querySelector<HTMLButtonElement>(".yar-active-filters .yar-chip-clear");

@@ -253,6 +253,32 @@ img {
 
 /* Fit modes -------------------------------------------------------------- */
 
+.yar-app[data-zoom="25"] { --yar-zoom: 0.25; }
+.yar-app[data-zoom="50"] { --yar-zoom: 0.5; }
+.yar-app[data-zoom="75"] { --yar-zoom: 0.75; }
+.yar-app[data-zoom="100"] { --yar-zoom: 1; }
+.yar-app[data-zoom="125"] { --yar-zoom: 1.25; }
+.yar-app[data-zoom="150"] { --yar-zoom: 1.5; }
+.yar-app[data-zoom="175"] { --yar-zoom: 1.75; }
+.yar-app[data-zoom="200"] { --yar-zoom: 2; }
+.yar-app[data-zoom="225"] { --yar-zoom: 2.25; }
+.yar-app[data-zoom="250"] { --yar-zoom: 2.5; }
+.yar-app[data-zoom="275"] { --yar-zoom: 2.75; }
+.yar-app[data-zoom="300"] { --yar-zoom: 3; }
+.yar-app[data-zoom="325"] { --yar-zoom: 3.25; }
+.yar-app[data-zoom="350"] { --yar-zoom: 3.5; }
+.yar-app[data-zoom="375"] { --yar-zoom: 3.75; }
+.yar-app[data-zoom="400"] { --yar-zoom: 4; }
+.yar-app[data-zoom="425"] { --yar-zoom: 4.25; }
+.yar-app[data-zoom="450"] { --yar-zoom: 4.5; }
+.yar-app[data-zoom="475"] { --yar-zoom: 4.75; }
+.yar-app[data-zoom="500"] { --yar-zoom: 5; }
+.yar-app[data-zoom="525"] { --yar-zoom: 5.25; }
+.yar-app[data-zoom="550"] { --yar-zoom: 5.5; }
+.yar-app[data-zoom="575"] { --yar-zoom: 5.75; }
+.yar-app[data-zoom="600"] { --yar-zoom: 6; }
+
+
 .yar-app[data-fit="width"] .yar-single .yar-page,
 .yar-app[data-fit="width"] .yar-strip .yar-page {
   width: 100%;

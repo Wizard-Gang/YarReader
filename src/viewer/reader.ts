@@ -353,7 +353,7 @@
 
     function applyFit(): void {
       app.setAttribute("data-fit", state.fit);
-      stage.style.setProperty("--yar-zoom", String(state.zoom));
+      app.setAttribute("data-zoom", String(Math.round(state.zoom * 100)));
       fitButton.textContent = state.fit === "width" ? "Fit width" : state.fit === "page" ? "Fit page" : "Zoom " + Math.round(state.zoom * 100) + "%";
     }
 

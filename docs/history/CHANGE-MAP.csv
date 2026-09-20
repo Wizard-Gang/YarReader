@@ -45,3 +45,4 @@ YR-044,SELF,YarReader,151c199,2026-09-19,direct,v1.1.0,apply GitHub repository s
 YR-045,SELF,YarReader,a5126fc,2026-09-19,direct,v1.1.0,capture portable-reader acceptance baseline on a Vitest DOM boundary
 YR-046,SELF,YarReader,27128dc,2026-09-19,direct,v1.1.0,adopt Vite browser pipeline and local development command
 YR-047,SELF,YarReader,e8a0d3b,2026-09-20,direct,v1.1.0,render portable documents with React static markup and split export boundaries
+YR-048,SELF,YarReader,d94c54a,2026-09-20,direct,v1.1.0,enforce strict file-compatible portable-content security

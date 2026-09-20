@@ -47,6 +47,15 @@ describe("document metadata", () => {
     expect([...document.querySelectorAll("script[src]")].some((script) => (script.getAttribute("src") ?? "").includes("react"))).toBe(false);
   });
 
+  test("declares a strict file-compatible CSP with no unsafe inline allowance", () => {
+    const csp = document.querySelector('meta[http-equiv="Content-Security-Policy"]')?.getAttribute("content") ?? "";
+    expect(csp).toContain("default-src 'none'");
+    expect(csp).toContain("script-src 'self' file:");
+    expect(csp).toContain("style-src 'self' file:");
+    expect(csp).toContain("connect-src 'none'");
+    expect(csp).not.toContain("unsafe-inline");
+  });
+
   test("references only relative stylesheets", () => {
     const sheets = [...document.querySelectorAll('link[rel="stylesheet"]')].map((link) => link.getAttribute("href") ?? "");
     expect(sheets.length).toBeGreaterThan(0);
@@ -86,13 +95,21 @@ describe("static links are usable without JavaScript", () => {
     }
   });
 
-  test("navigation needs no script, handler attribute or placeholder target", () => {
+  test("navigation needs no inline script, style, handler attribute or placeholder target", () => {
     const main = document.querySelector("main[data-library]")!;
     expect(main.querySelector("script")).toBeNull();
-    for (const element of main.querySelectorAll("*")) {
+    expect(document.querySelector("style,[style]")).toBeNull();
+    for (const element of document.querySelectorAll("*")) {
       for (const attribute of element.getAttributeNames()) expect(attribute.startsWith("on")).toBe(false);
     }
     for (const link of main.querySelectorAll("a")) expect(link.getAttribute("href")).not.toBe("#");
+  });
+
+  test("startup configuration is inert markup", () => {
+    const main = document.querySelector<HTMLElement>("main[data-library]")!;
+    expect(main.getAttribute("data-yar-start")).toBe("library");
+    expect(main.getAttribute("data-yar-root")).toBe("./");
+    expect(main.getAttribute("data-yar-label")).toBe("YarReader");
   });
 });
 
@@ -100,6 +117,7 @@ describe("progressive enhancement boundary", () => {
   test("scripts are additive, deferred to the end and first-party relative", () => {
     const scripts = [...document.querySelectorAll("script")];
     const sourced = scripts.filter((script) => script.hasAttribute("src"));
+    expect(sourced).toHaveLength(scripts.length);
     expect(sourced.map((script) => script.getAttribute("src"))).toEqual(["./catalog.js", `./${viewerAssets.script}`]);
     const main = document.querySelector("main[data-library]")!;
     for (const script of scripts) {

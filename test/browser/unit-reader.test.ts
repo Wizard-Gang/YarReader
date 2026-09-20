@@ -36,6 +36,15 @@ describe("document metadata", () => {
     expect(document.querySelector('meta[name="generator"]')?.getAttribute("content")).toBe("YarReader");
   });
 
+  test("declares a strict file-compatible CSP with no unsafe inline allowance", () => {
+    const csp = document.querySelector('meta[http-equiv="Content-Security-Policy"]')?.getAttribute("content") ?? "";
+    expect(csp).toContain("default-src 'none'");
+    expect(csp).toContain("script-src 'self' file:");
+    expect(csp).toContain("style-src 'self' file:");
+    expect(csp).toContain("connect-src 'none'");
+    expect(csp).not.toContain("unsafe-inline");
+  });
+
   test("reaches shared assets through a relative prefix only", async () => {
     const references = [
       document.querySelector('link[rel="icon"]')?.getAttribute("href"),
@@ -68,12 +77,20 @@ describe("page images are usable without JavaScript", () => {
     expect(loading.slice(1)).toEqual(Array(FIXTURE_PAGE_COUNT - 1).fill("lazy"));
   });
 
-  test("pages are in document order with no script or handler attribute", () => {
+  test("pages are in document order with no inline script, style or handler attribute", () => {
     const main = document.querySelector("main[data-pages]")!;
     expect(main.querySelector("script")).toBeNull();
-    for (const element of main.querySelectorAll("*")) {
+    expect(document.querySelector("style,[style]")).toBeNull();
+    for (const element of document.querySelectorAll("*")) {
       for (const attribute of element.getAttributeNames()) expect(attribute.startsWith("on")).toBe(false);
     }
+  });
+
+  test("startup configuration is inert markup", () => {
+    const main = document.querySelector<HTMLElement>("main[data-pages]")!;
+    expect(main.getAttribute("data-yar-start")).toBe("reader");
+    expect(main.getAttribute("data-yar-path")).toBe(UNIT_PATH);
+    expect(main.getAttribute("data-yar-root")).toBe("../../../");
   });
 });
 
