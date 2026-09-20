@@ -43,3 +43,4 @@ YR-042,SELF,YarReader,949ba36,2026-09-19,direct,v1.1.0,normalize GitHub settings
 YR-043,SELF,YarReader,75e311b,2026-09-19,direct,v1.1.0,formalize continuous plan execution and do-needful handoff
 YR-044,SELF,YarReader,151c199,2026-09-19,direct,v1.1.0,apply GitHub repository settings and rulesets
 YR-045,SELF,YarReader,a5126fc,2026-09-19,direct,v1.1.0,capture portable-reader acceptance baseline on a Vitest DOM boundary
+YR-046,SELF,YarReader,27128dc,2026-09-19,direct,v1.1.0,adopt Vite browser pipeline and local development command

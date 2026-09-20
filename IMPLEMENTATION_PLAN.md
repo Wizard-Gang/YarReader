@@ -4,7 +4,7 @@ Status: **Active**
 
 Scope: streamline YarReader around the published WG-ARCH-001 repository baseline while preserving its defining product boundary: a local crash-recoverable ingestion/archive CLI that emits a self-contained offline reader which works from `file://`.
 
-This file is the active planning source of truth for YR-045 through YR-053. Executable source, `ARCHITECTURE.md`, current policy documents, and released interfaces remain authoritative for shipped behavior. This plan contains only current and future work. Merged task blocks are removed instead of being retained as a completed-task ledger. YR-053 retires this plan after the durable rules have moved into their permanent authorities.
+This file is the active planning source of truth for YR-046 through YR-053. Executable source, `ARCHITECTURE.md`, current policy documents, and released interfaces remain authoritative for shipped behavior. This plan contains only current and future work. Merged task blocks are removed instead of being retained as a completed-task ledger. YR-053 retires this plan after the durable rules have moved into their permanent authorities.
 
 ## Context
 
@@ -13,9 +13,9 @@ Current-state observations:
 | Area | Current state |
 |---|---|
 | Runtime/toolchain | Node 26.9.0, npm 11.19.1, TypeScript 7.0.2, strict ESM |
-| Commands | `build`, `typecheck`, `test`, and `check` exist; required baseline `dev` command is missing |
+| Commands | `build`, `typecheck`, `test:node`, `test:browser`, `test`, `check`, `check:history`, `check:safety`, and `verify:github-settings` exist; the required baseline `dev` command is still missing |
 | Viewer build | `tsc -p tsconfig.viewer.json` plus `scripts/copy-viewer-assets.mjs`; no Vite |
-| Browser presentation | two first-party TypeScript modules plus CSS; no React and no Vitest DOM suite |
+| Browser presentation | two first-party TypeScript modules plus CSS; no React, but a Vitest DOM acceptance suite exists |
 | HTML generation | `src/export.ts` assembles complete documents with template strings, a CSS string, and inline startup scripts |
 | Export boundary | static HTML and images are complete before enhancement; portable exports intentionally run without a server |
 | Release history | ten checked-in files under `docs/releases/`; `release.yml` reads them to publish GitHub Releases |
@@ -74,10 +74,6 @@ The viewer compiles through a second TypeScript emit and copies CSS with a custo
 
 Generated documents include inline fallback CSS and inline startup scripts. A strict CSP without `'unsafe-inline'` therefore cannot describe the current export.
 
-### F5 — Browser behavior lacks a DOM-focused test boundary
-
-The repository uses `node:test` for all tests. That remains appropriate for pipeline logic, but viewer behavior should have a Vitest 5 DOM suite before the presentation is refactored.
-
 ### F6 — Current-tree release Markdown duplicates GitHub Releases
 
 `docs/releases/v*.md` is a parallel release archive, and `release.yml` depends on it. WG-ARCH-001 makes annotated tags and GitHub Releases the release-history authority.
@@ -101,18 +97,6 @@ The README still presents `typecheck` and `test` separately as the normal verifi
 ## Delivery sequence
 
 Changes are sequential. The first task below is the current default assignment. Do not consume a later reserved YR ID before the prior change is merged unless the owner explicitly changes the plan.
-
-### YR-045 — TEST — Capture portable-reader acceptance baseline
-
-- add Vitest 5 and a DOM implementation only for browser/presentation tests;
-- keep the existing `node:test` pipeline suite and make `npm test` run both test boundaries;
-- generate a synthetic portable library fixture with no real media or curation data;
-- capture semantic acceptance for the library index and one unit reader: complete static links/images, document metadata, controls, reading modes, filtering hooks, keyboard-operable actions, asset inventory, and no network/runtime API dependency;
-- exercise the current first-party viewer modules against the synthetic DOM so later build/presentation changes have a behavioral baseline;
-- repair `scripts/check-controlled-history.mjs` so it enumerates controlled commits only, now that merge-commit-only merging puts merge commits on `main`;
-- change no production behavior.
-
-Closes F5.
 
 ### YR-046 — BUILD — Adopt the Vite browser pipeline and local dev command
 
@@ -188,7 +172,7 @@ Closes F9, F11, and F12.
 
 ### YR-053 — BUILD — Prepare normalized v1.1.0 release
 
-After YR-045 through YR-052 are merged and green:
+After YR-046 through YR-052 are merged and green:
 
 - set `package.json` to 1.1.0 and reproduce the final release candidate from a clean checkout;
 - move every durable rule from this plan into `AGENTS.md`, `ARCHITECTURE.md`, `CONTRIBUTING.md`, or the relevant current policy document;

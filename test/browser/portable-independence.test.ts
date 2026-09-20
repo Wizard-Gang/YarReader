@@ -21,18 +21,10 @@ import {
   staticDocument,
   type PortableFixture,
   type TrappedDocument,
+  type ViewerBuildAssets,
+  viewerBuildAssets,
 } from "./fixture.js";
 
-const ROOT_ASSETS = [
-  "assets/favicon.svg",
-  "catalog.js",
-  "index.html",
-  "library.css",
-  "library.js",
-  "manifest.json",
-  "reader.css",
-  "reader.js",
-];
 
 /** APIs a portable `file://` reader must never depend on. */
 const FORBIDDEN_RUNTIME_APIS = [
@@ -51,8 +43,10 @@ const FORBIDDEN_RUNTIME_APIS = [
 
 let fixture: PortableFixture;
 let files: string[];
+let viewerAssets: ViewerBuildAssets;
 
 beforeAll(async () => {
+  viewerAssets = await viewerBuildAssets();
   fixture = await buildPortableFixture();
   files = await inventory(fixture.root);
 });
@@ -63,8 +57,18 @@ const unitPaths = FIXTURE_SERIES.flatMap((entry) =>
 );
 
 describe("browser asset inventory", () => {
-  test("ships exactly the expected root assets", () => {
-    expect(files.filter((file) => !file.startsWith("library/"))).toEqual(ROOT_ASSETS);
+  test("ships exactly the Vite-manifest assets plus the portable root files", () => {
+    const expectedRoot = [
+      "assets/favicon.svg",
+      "catalog.js",
+      "index.html",
+      "manifest.json",
+      ...viewerAssets.files,
+    ].sort();
+    expect(files.filter((file) => !file.startsWith("library/"))).toEqual(expectedRoot);
+    expect(viewerAssets.script).toMatch(/^assets\/viewer-[^/]+\.js$/);
+    for (const style of viewerAssets.styles) expect(style).toMatch(/^assets\/viewer-[^/]+\.css$/);
+    for (const fixed of ["reader.js", "library.js", "reader.css", "library.css"]) expect(files).not.toContain(fixed);
   });
 
   test("ships exactly one complete directory per unit", () => {
@@ -79,8 +83,8 @@ describe("browser asset inventory", () => {
     expect(files.filter((file) => file.endsWith("/index.html"))).toHaveLength(unitPaths.length);
   });
 
-  test("the shipped viewer assets are the compiled first-party build", async () => {
-    for (const asset of ["reader.js", "library.js", "reader.css", "library.css"]) {
+  test("every shipped viewer asset is byte-identical to its Vite build output", async () => {
+    for (const asset of viewerAssets.files) {
       const shipped = await readFile(path.join(fixture.root, asset));
       const built = await readFile(path.join(REPOSITORY_ROOT, "dist", "viewer", asset));
       expect(shipped.equals(built)).toBe(true);
@@ -159,7 +163,7 @@ function assertTrapArmed(enhanced: TrappedDocument): void {
 
 describe("the enhanced viewer never reaches for a network API", () => {
   test("every documented network entry point is replaced before the viewer runs", async () => {
-    const enhanced = await networkTrappedDocument(fixture.root, fixture.indexHtml, "library.js");
+    const enhanced = await networkTrappedDocument(fixture.root, fixture.indexHtml);
     try {
       for (const api of TRAPPED_NETWORK_APIS) {
         const [namespace, member, nested] = api.split(".");
@@ -176,7 +180,7 @@ describe("the enhanced viewer never reaches for a network API", () => {
 
   test("driving the whole reader touches no network entry point", async () => {
     const unit = `${unitPaths[0]!}/`;
-    const enhanced = await networkTrappedDocument(fixture.root, path.join(fixture.root, unit, "index.html"), "reader.js");
+    const enhanced = await networkTrappedDocument(fixture.root, path.join(fixture.root, unit, "index.html"));
     try {
       assertTrapArmed(enhanced);
       readerModule(enhanced.window).start({ path: unit, root: "../../../" });
@@ -196,7 +200,7 @@ describe("the enhanced viewer never reaches for a network API", () => {
   });
 
   test("driving the whole library touches no network entry point", async () => {
-    const enhanced = await networkTrappedDocument(fixture.root, fixture.indexHtml, "library.js");
+    const enhanced = await networkTrappedDocument(fixture.root, fixture.indexHtml);
     try {
       assertTrapArmed(enhanced);
       libraryModule(enhanced.window).start({ root: "./", label: "YarReader" });

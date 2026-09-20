@@ -43,8 +43,25 @@ function escapeHtml(value: string): string {
     .replaceAll("'", "&#39;");
 }
 
-const VIEWER_ASSET_NAMES = ["reader.js", "library.js", "reader.css", "library.css"] as const;
+const ViteManifestEntrySchema = z.object({
+  file: z.string().min(1),
+  css: z.array(z.string().min(1)).optional(),
+  assets: z.array(z.string().min(1)).optional(),
+  imports: z.array(z.string().min(1)).optional(),
+  dynamicImports: z.array(z.string().min(1)).optional(),
+  isEntry: z.boolean().optional()
+}).passthrough();
+const ViteManifestSchema = z.record(z.string(), ViteManifestEntrySchema);
+const VIEWER_ENTRY = "src/viewer/entry.ts";
 const VIEWER_ROOT = fileURLToPath(new URL("../viewer/", import.meta.url));
+const VIEWER_MANIFEST = path.join(VIEWER_ROOT, "manifest.json");
+
+interface ViewerAssets {
+  script: string;
+  styles: readonly string[];
+  files: readonly string[];
+}
+
 const FAVICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Library"><rect width="64" height="64" rx="12" fill="#17191f"/><rect x="12" y="14" width="12" height="36" rx="2" fill="#6ea8fe"/><rect x="27" y="14" width="10" height="36" rx="2" fill="#9aa1b1"/><rect x="40" y="18" width="12" height="32" rx="2" fill="#e8eaf0"/></svg>\n`;
 const FALLBACK_CSS = `:root{color-scheme:dark;background:#111;color:#eee;font:16px system-ui,sans-serif}body{margin:0 auto;max-width:80rem;padding:1rem}a{color:#9bd}.yar-static-library section{border-top:1px solid #333;margin-top:1rem}.yar-static-library ol{line-height:1.7}.yar-reader-body{max-width:none;padding:0}.reader-fallback header{position:sticky;top:0;background:#111e;padding:.6rem;z-index:2}.reader-fallback img{display:block;max-width:100%;height:auto;margin:0 auto}`;
 
@@ -153,14 +170,59 @@ async function writeAndSync(file: string, content: string | Buffer): Promise<voi
   await fsyncFile(file);
 }
 
-async function writeViewerAssets(stage: string): Promise<void> {
-  for (const name of VIEWER_ASSET_NAMES) {
-    await writeAndSync(path.join(stage, name), await readFile(path.join(VIEWER_ROOT, name)));
+function portableViewerPath(relative: string): string {
+  const normalized = relative.replaceAll("\\", "/");
+  const parts = normalized.split("/");
+  if (!normalized || normalized.startsWith("/") || /^[A-Za-z]:/.test(normalized) ||
+      parts.some((part) => !part || part === "." || part === "..")) {
+    throw new Error(`Vite viewer manifest contains an unsafe asset path: ${relative}`);
+  }
+  return normalized;
+}
+
+async function loadViewerAssets(): Promise<ViewerAssets> {
+  const manifest = ViteManifestSchema.parse(JSON.parse(await readFile(VIEWER_MANIFEST, "utf8")) as unknown);
+  const entry = manifest[VIEWER_ENTRY] ?? Object.values(manifest).find((candidate) => candidate.isEntry === true);
+  if (!entry) throw new Error(`Vite viewer manifest has no entry for ${VIEWER_ENTRY}`);
+  if ((entry.imports?.length ?? 0) > 0 || (entry.dynamicImports?.length ?? 0) > 0) {
+    throw new Error("Portable viewer must build as one classic JavaScript bundle with no chunk imports");
+  }
+
+  const script = portableViewerPath(entry.file);
+  const styles = [...new Set([
+    ...(entry.css ?? []),
+    ...Object.values(manifest)
+      .map((candidate) => candidate.file)
+      .filter((file) => file.endsWith(".css"))
+  ].map(portableViewerPath))];
+  if (!script.endsWith(".js") || styles.length === 0 || styles.some((style) => !style.endsWith(".css"))) {
+    throw new Error("Vite viewer manifest must identify one JavaScript entry and at least one stylesheet");
+  }
+  const files = [...new Set([script, ...styles, ...(entry.assets ?? []).map(portableViewerPath)])];
+  for (const relative of files) {
+    const info = await stat(path.join(VIEWER_ROOT, ...relative.split("/")));
+    if (!info.isFile()) throw new Error(`Vite viewer asset is missing: ${relative}`);
+  }
+  return { script, styles, files };
+}
+
+async function writeViewerAssets(stage: string, viewer: ViewerAssets): Promise<void> {
+  for (const relative of viewer.files) {
+    await writeAndSync(
+      path.join(stage, ...relative.split("/")),
+      await readFile(path.join(VIEWER_ROOT, ...relative.split("/")))
+    );
   }
   await writeAndSync(path.join(stage, "assets", "favicon.svg"), FAVICON);
 }
 
-function renderRootHtml(units: readonly UnitRecord[]): string {
+function viewerStyleLinks(viewer: ViewerAssets, prefix: string): string {
+  return viewer.styles
+    .map((style) => `<link rel="stylesheet" href="${escapeHtml(prefix + style)}">`)
+    .join("\n");
+}
+
+function renderRootHtml(units: readonly UnitRecord[], viewer: ViewerAssets): string {
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -171,14 +233,13 @@ function renderRootHtml(units: readonly UnitRecord[]): string {
 <title>YarReader</title>
 <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
 <style>${FALLBACK_CSS}</style>
-<link rel="stylesheet" href="./reader.css">
-<link rel="stylesheet" href="./library.css">
+${viewerStyleLinks(viewer, "./")}
 </head>
 <body class="yar-library-body">
 <h1>YarReader</h1>
 <main id="library" data-library class="yar-static-library">${libraryMarkup(units)}</main>
 <script src="./catalog.js"></script>
-<script src="./library.js"></script>
+<script src="./${escapeHtml(viewer.script)}"></script>
 <script>
   ComicLibrary.start({ root: "./", label: "YarReader" });
 </script>
@@ -187,7 +248,7 @@ function renderRootHtml(units: readonly UnitRecord[]): string {
 `;
 }
 
-function renderLeafHtml(unit: UnitRecord, rootPrefix: string, pageNames: readonly string[]): string {
+function renderLeafHtml(unit: UnitRecord, rootPrefix: string, pageNames: readonly string[], viewer: ViewerAssets): string {
   const itemPath = `library/${unit.id}/`;
   const pageMarkup = pageNames.map((page, index) =>
     `<img src="pages/${escapeHtml(page)}" loading="${index === 0 ? "eager" : "lazy"}" decoding="async" alt="Page ${index + 1}">`
@@ -202,12 +263,12 @@ function renderLeafHtml(unit: UnitRecord, rootPrefix: string, pageNames: readonl
 <title>${escapeHtml(`${unit.series} - ${unitTitle(unit)}`)}</title>
 <link rel="icon" href="${rootPrefix}assets/favicon.svg" type="image/svg+xml">
 <style>${FALLBACK_CSS}</style>
-<link rel="stylesheet" href="${rootPrefix}reader.css">
+${viewerStyleLinks(viewer, rootPrefix)}
 </head>
 <body class="yar-reader-body">
 <main id="reader" class="reader-fallback" data-pages><header><a href="${rootPrefix}index.html">Library</a> · ${escapeHtml(unit.series)}</header>${pageMarkup}</main>
 <script src="${rootPrefix}catalog.js"></script>
-<script src="${rootPrefix}reader.js"></script>
+<script src="${escapeHtml(rootPrefix + viewer.script)}"></script>
 <script>
   ComicReader.start({ path: ${jsString(itemPath)}, root: ${jsString(rootPrefix)} });
 </script>
@@ -282,10 +343,11 @@ async function buildStage(store: CatalogStore, catalog: Catalog, stage: string, 
     const release = selectedRelease(unit);
     if (!release?.normalization || !(await verifyNormalization(store, release.normalization))) throw new Error(`Selected release is not normalized: ${unit.id}`);
   });
-  await writeViewerAssets(stage);
+  const viewer = await loadViewerAssets();
+  await writeViewerAssets(stage, viewer);
   const seriesCovers = await publishSeriesCovers(store, stage, units);
   await writeAndSync(path.join(stage, "catalog.js"), catalogPayload(units, catalog, seriesCovers));
-  await writeAndSync(path.join(stage, "index.html"), renderRootHtml(units));
+  await writeAndSync(path.join(stage, "index.html"), renderRootHtml(units, viewer));
   const manifestUnits: Manifest["units"] = [];
   for (const unit of units) {
     const normalization = selectedRelease(unit)!.normalization!;
@@ -302,7 +364,7 @@ async function buildStage(store: CatalogStore, catalog: Catalog, stage: string, 
     });
     await publishImmutable(await unitThumbnail(store, normalization), path.join(unitRoot, "thumbnail.webp"));
     const rootPrefix = "../".repeat(unit.id.split("/").length + 1);
-    await writeAndSync(path.join(unitRoot, "index.html"), renderLeafHtml(unit, rootPrefix, pageNames));
+    await writeAndSync(path.join(unitRoot, "index.html"), renderLeafHtml(unit, rootPrefix, pageNames, viewer));
     await fsyncDirectory(pagesRoot);
     await fsyncDirectory(unitRoot);
     manifestUnits.push({ id: unit.id, pageCount: normalization.pages.length });
@@ -329,6 +391,16 @@ export async function validateExport(root: string): Promise<{ files: number; uni
   const actual = (await listTree(root)).filter((relative) => relative !== "manifest.json").sort();
   const expected = Object.keys(manifest.files).sort();
   if (JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error("Export file membership differs from its manifest");
+
+  const viewer = await loadViewerAssets();
+  const expectedViewer = [...viewer.files].sort();
+  const actualViewer = expected
+    .filter((relative) => relative.startsWith("assets/") && relative !== "assets/favicon.svg")
+    .sort();
+  if (JSON.stringify(actualViewer) !== JSON.stringify(expectedViewer)) {
+    throw new Error("Portable export viewer assets differ from the generated Vite manifest");
+  }
+
   const manifestFiles = Object.entries(manifest.files);
   await runBounded(manifestFiles, 16, async ([relative, expectedHash]) => {
     const file = safeJoin(root, ...relative.split("/"));
@@ -342,11 +414,21 @@ export async function validateExport(root: string): Promise<{ files: number; uni
 
   const rootHtml = await readFile(path.join(root, "index.html"), "utf8");
   if (!/<main\b[^>]*\bdata-library\b/i.test(rootHtml)) throw new Error("Portable root index is missing its static library markup");
+  for (const style of viewer.styles) {
+    if (!rootHtml.includes(`href="./${escapeHtml(style)}"`)) throw new Error(`Portable root index is missing Vite stylesheet: ${style}`);
+  }
+  if (!rootHtml.includes(`src="./${escapeHtml(viewer.script)}"`)) throw new Error("Portable root index is missing the Vite viewer script");
+
   for (const unit of manifest.units) {
     const rootHref = path.posix.join("library", unit.id, "index.html");
     if (!rootHtml.includes(`href="${escapeHtml(rootHref)}"`)) throw new Error(`Portable root index is missing a static unit link: ${unit.id}`);
     const unitIndex = safeJoin(root, "library", ...unit.id.split("/"), "index.html");
     const html = await readFile(unitIndex, "utf8");
+    const rootPrefix = "../".repeat(unit.id.split("/").length + 1);
+    for (const style of viewer.styles) {
+      if (!html.includes(`href="${escapeHtml(rootPrefix + style)}"`)) throw new Error(`Portable unit is missing Vite stylesheet: ${unit.id}:${style}`);
+    }
+    if (!html.includes(`src="${escapeHtml(rootPrefix + viewer.script)}"`)) throw new Error(`Portable unit is missing the Vite viewer script: ${unit.id}`);
     const pagePrefix = `${path.posix.join("library", unit.id, "pages")}/`;
     const expectedPages = expected
       .filter((relative) => relative.startsWith(pagePrefix) && !relative.slice(pagePrefix.length).includes("/"))

@@ -19,7 +19,7 @@
     "ARCHITECTURE.md"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json && tsc -p tsconfig.viewer.json && node scripts/copy-viewer-assets.mjs",
+    "build": "tsc -p tsconfig.json && vite build --config vite.viewer.config.ts",
     "check:history": "node scripts/check-controlled-history.mjs",
     "check:safety": "node scripts/check-public-safety.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.viewer.json --noEmit",
@@ -27,7 +27,8 @@
     "test:browser": "tsc -p tsconfig.browser-test.json --noEmit && vitest run",
     "test": "npm run build && npm run test:node && npm run test:browser",
     "check": "npm run typecheck && npm test && npm run build && npm run check:history && npm run check:safety",
-    "verify:github-settings": "node scripts/verify-github-settings.mjs"
+    "verify:github-settings": "node scripts/verify-github-settings.mjs",
+    "dev": "vite --config vite.viewer.config.ts"
   },
   "dependencies": {
     "commander": "15.0.0",
@@ -45,6 +46,7 @@
     "@types/yazl": "3.3.1",
     "jsdom": "30.1.0",
     "typescript": "7.0.2",
+    "vite": "8.3.0",
     "vitest": "5.0.1"
   },
   "packageManager": "npm@11.19.1",

@@ -5,12 +5,21 @@
 import { access } from "node:fs/promises";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
-import { FIXTURE_SERIES, buildPortableFixture, staticDocument, type PortableFixture } from "./fixture.js";
+import {
+  FIXTURE_SERIES,
+  buildPortableFixture,
+  staticDocument,
+  type PortableFixture,
+  type ViewerBuildAssets,
+  viewerBuildAssets,
+} from "./fixture.js";
 
 let fixture: PortableFixture;
 let document: Document;
+let viewerAssets: ViewerBuildAssets;
 
 beforeAll(async () => {
+  viewerAssets = await viewerBuildAssets();
   fixture = await buildPortableFixture();
   document = await staticDocument(fixture.indexHtml);
 });
@@ -86,7 +95,7 @@ describe("progressive enhancement boundary", () => {
   test("scripts are additive, deferred to the end and first-party relative", () => {
     const scripts = [...document.querySelectorAll("script")];
     const sourced = scripts.filter((script) => script.hasAttribute("src"));
-    expect(sourced.map((script) => script.getAttribute("src"))).toEqual(["./catalog.js", "./library.js"]);
+    expect(sourced.map((script) => script.getAttribute("src"))).toEqual(["./catalog.js", `./${viewerAssets.script}`]);
     const main = document.querySelector("main[data-library]")!;
     for (const script of scripts) {
       expect(main.compareDocumentPosition(script) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();

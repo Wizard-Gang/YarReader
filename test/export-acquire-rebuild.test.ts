@@ -38,10 +38,21 @@ test("transactional export works without JavaScript and progressively enhances u
   assert.ok(html.includes('<a href="library/fixture-series/issue-0001/index.html">'));
   assert.match(html, /class="yar-library-body"/);
   assert.match(html, /ComicLibrary\.start/);
-  assert.match(html, /\.\/reader\.css/);
-  assert.match(html, /\.\/library\.css/);
+  const viewerManifest = JSON.parse(await readFile(path.resolve("dist/viewer/manifest.json"), "utf8")) as Record<
+    string,
+    { file: string; css?: string[]; assets?: string[]; isEntry?: boolean }
+  >;
+  const viewerEntry = viewerManifest["src/viewer/entry.ts"] ?? Object.values(viewerManifest).find((candidate) => candidate.isEntry === true);
+  assert.ok(viewerEntry, "Vite viewer manifest must publish one browser entry");
+  const viewerStyles = [...new Set([
+    ...(viewerEntry.css ?? []),
+    ...Object.values(viewerManifest).map((candidate) => candidate.file).filter((file) => file.endsWith(".css")),
+  ])];
+  const viewerFiles = [...new Set([viewerEntry.file, ...viewerStyles, ...(viewerEntry.assets ?? [])])];
+  for (const style of viewerStyles) assert.ok(html.includes(`href="./${style}"`));
+  assert.ok(html.includes(`src="./${viewerEntry.file}"`));
 
-  for (const asset of ["reader.js", "library.js", "reader.css", "library.css", "assets/favicon.svg"]) {
+  for (const asset of [...viewerFiles, "assets/favicon.svg"]) {
     assert.ok(await lstat(path.join(paths.activeExport, asset)), `${asset} should ship with the portable viewer`);
   }
 
@@ -59,7 +70,8 @@ test("transactional export works without JavaScript and progressively enhances u
   const rootPrefix = "../".repeat(unit.id.split("/").length + 1);
   assert.match(leaf, /class="yar-reader-body"/);
   assert.match(leaf, /ComicReader\.start/);
-  assert.ok(leaf.includes(`href="${rootPrefix}reader.css"`));
+  for (const style of viewerStyles) assert.ok(leaf.includes(`href="${rootPrefix}${style}"`));
+  assert.ok(leaf.includes(`src="${rootPrefix}${viewerEntry.file}"`));
   assert.ok(leaf.includes(`root: "${rootPrefix}"`));
   assert.equal(leaf.match(/<img\b/g)?.length, 2);
   assert.ok(leaf.includes('src="pages/000001.webp"'));
@@ -170,27 +182,31 @@ test("curated cover fetches are optimized, persisted, and exported", async (t) =
   assert.match(await readFile(path.join(paths.activeExport, "catalog.js"), "utf8"), /"seriesCover":"covers\/fixture-series\.webp"/);
 });
 
-test("compiled legacy viewer stays self-contained and publishes its browser entry points", async () => {
+test("compiled Vite viewer stays self-contained and publishes its browser entry points", async () => {
   const viewerRoot = path.resolve("dist/viewer");
-  for (const name of ["reader.js", "library.js"]) {
-    const source = await readFile(path.join(viewerRoot, name), "utf8");
-    assert.ok(!/^\s*(?:import|export)\s/m.test(source), `${name} must be a plain script`);
-    assert.ok(!/\bfetch\s*\(|XMLHttpRequest|\bnew\s+WebSocket\b|https?:\/\//.test(source), `${name} must not use the network`);
+  const manifest = JSON.parse(await readFile(path.join(viewerRoot, "manifest.json"), "utf8")) as Record<
+    string,
+    { file: string; css?: string[]; isEntry?: boolean }
+  >;
+  const entry = manifest["src/viewer/entry.ts"] ?? Object.values(manifest).find((candidate) => candidate.isEntry === true);
+  assert.ok(entry, "Vite viewer manifest must publish one browser entry");
+
+  const source = await readFile(path.join(viewerRoot, entry.file), "utf8");
+  assert.ok(!/^\s*(?:import|export)\s/m.test(source), `${entry.file} must be a plain script`);
+  assert.ok(!/\bfetch\s*\(|XMLHttpRequest|\bnew\s+WebSocket\b|https?:\/\//.test(source), `${entry.file} must not use the network`);
+  for (const marker of [/ComicReader/, /ComicLibrary/, /Manga \(RTL\)/, /Webtoons \(Scroll\)/, /Filter by genre/, /layout-v2:/]) {
+    assert.match(source, marker);
   }
-  assert.match(await readFile(path.join(viewerRoot, "reader.js"), "utf8"), /ComicReader/);
-  const library = await readFile(path.join(viewerRoot, "library.js"), "utf8");
-  assert.match(library, /ComicLibrary/);
-  assert.match(library, /UNIT_PAGE_SIZE = 120/);
-  assert.match(library, /Manga \(RTL\)/);
-  assert.match(library, /Webtoons \(Scroll\)/);
-  assert.match(library, /Filter by genre/);
-  const reader = await readFile(path.join(viewerRoot, "reader.js"), "utf8");
-  assert.match(reader, /layout-v2:/);
-  assert.match(reader, /state\.mode === "scroll"/);
-  for (const name of ["reader.css", "library.css"]) {
-    const source = await readFile(path.join(viewerRoot, name), "utf8");
-    assert.ok(!/@import|url\(\s*['"]?https?:/i.test(source), `${name} must not load remote styles`);
-  }
+
+  const styles = [...new Set([
+    ...(entry.css ?? []),
+    ...Object.values(manifest).map((candidate) => candidate.file).filter((file) => file.endsWith(".css")),
+  ])];
+  assert.ok(styles.length > 0, "Vite viewer manifest must publish stylesheet output");
+  const css = (await Promise.all(styles.map((name) => readFile(path.join(viewerRoot, name), "utf8")))).join("\n");
+  assert.ok(!/@import|url\(\s*['"]?https?:/i.test(css), "viewer styles must not load remote content");
+  assert.match(css, /\.yar-reader-body/);
+  assert.match(css, /\.yar-library-body/);
 });
 
 test("export membership validation is order-independent for fractional identities", async (t) => {
