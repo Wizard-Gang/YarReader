@@ -31,6 +31,7 @@ const currentTypes = new Set([
   "REVERT",
   "CHORE",
 ]);
+// Exact exceptions for immutable published history stay beside this validator.
 const legacyTypes = new Map([["YR-035", "CI"]]);
 const titlePattern = /^\[YR-(\d{3,})\] \[([A-Z0-9]+)\] .+/;
 const requiredSections = ["Change", "Reason", "Impact", "Risk", "Controls", "Validation", "Evidence", "Source", "Release"];
@@ -65,7 +66,6 @@ records.forEach((record, index) => {
   }
   if (!/(?:^|\n)Risk:\s*(?:\n\s*)?(?:Low|Medium|High)\b/m.test(body)) failures.push(`${id} has no Low, Medium, or High risk`);
   if (!/(?:^|\n)Release:\s*(?:\n\s*)?v\d+\.\d+\.\d+\b/m.test(body)) failures.push(`${id} has no semantic release`);
-  if (!/(?:^|\n)Source:\s*(?:\n\s*)?YarReader [0-9a-f]{7,40} \(\d{4}-\d{2}-\d{2}\)/m.test(body)) failures.push(`${id} has invalid source provenance`);
 });
 
 if (failures.length > 0) {

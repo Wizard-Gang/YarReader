@@ -4,7 +4,7 @@ Status: **Active**
 
 Scope: streamline YarReader around the published WG-ARCH-001 repository baseline while preserving its defining product boundary: a local crash-recoverable ingestion/archive CLI that emits a self-contained offline reader which works from `file://`.
 
-This file is the active planning source of truth for YR-050 through YR-053. Executable source, `ARCHITECTURE.md`, current policy documents, and released interfaces remain authoritative for shipped behavior. This plan contains only current and future work. Merged task blocks are removed instead of being retained as a completed-task ledger. YR-053 retires this plan after the durable rules have moved into their permanent authorities.
+This file is the active planning source of truth for YR-051 through YR-053. Executable source, `ARCHITECTURE.md`, current policy documents, and released interfaces remain authoritative for shipped behavior. This plan contains only current and future work. Merged task blocks are removed instead of being retained as a completed-task ledger. YR-053 retires this plan after the durable rules have moved into their permanent authorities.
 
 ## Context
 
@@ -20,7 +20,7 @@ Current-state observations:
 | Export boundary | `src/export.ts` owns transaction/orchestration; `src/export-presentation.ts` owns React static documents; `src/export-assets.ts` owns manifest-driven viewer publication; `src/export-validation.ts` owns portable-export validation; `src/export-security.ts` owns the portable HTML/CSP security contract; static HTML/images remain complete before enhancement |
 | Release history | annotated semantic tags and GitHub Releases are the sole release archive; `release.yml` verifies the exact tagged tree and package version, runs the repository gate, and publishes generated notes from Git/GitHub state; there is no production deployment stage |
 | Current released version | `package.json` 1.0.1 with GitHub Releases through v1.0.1 |
-| Historical documentation | reconstruction narrative plus `docs/history/**` duplicate superseded repository/release state that Git/GitHub already retain |
+| Historical state | Git/GitHub are the sole authority for superseded repository states and release history; the current tree keeps no reconstruction narrative or parallel historical ledger |
 | GitHub settings | active `main` and `v*` rulesets match `config/github-repository-settings.json`; merge commits are the only merge method; merged branches are deleted |
 
 ## Plan maintenance
@@ -56,33 +56,9 @@ These decisions govern the sequence unless a later controlled record explicitly 
 11. **Release target.** The normalization sequence prepares v1.1.0. The release tag itself is not pushed without an explicit release instruction.
 12. **Private-data boundary.** Runtime media, catalogs, generated exports, covers, credentials, private URLs, personal paths, and real curation inventories never enter repository history.
 
-## Findings this sequence closes
-
-### F9 — Reconstruction-era documentation remains in the current tree
-
-`docs/RECONSTRUCTION.md` and `docs/history/**` narrate superseded implementation/publication state. That information is already available from immutable Git/GitHub history and should not stay as a second authority.
-
-### F11 — The permanent architecture does not yet state the §27 exception
-
-`ARCHITECTURE.md` accurately describes an offline static reader, but it does not explicitly state why Cloudflare/Workers deployment rules are not applicable or which parts of the browser baseline are still required.
-
-### F12 — README and contributor guidance lag the post-YR-040 command model
-
-The README still presents `typecheck` and `test` separately as the normal verification path instead of the canonical `npm run check` gate.
-
 ## Delivery sequence
 
 Changes are sequential. The first task below is the current default assignment. Do not consume a later reserved YR ID before the prior change is merged unless the owner explicitly changes the plan.
-
-### YR-050 — BUILD — Make GitHub Releases the only release archive
-
-- update `release.yml` so it checks out the exact semantic annotated tag, requires `package.json` version to match it, runs `npm ci` and `npm run check`, and publishes GitHub-generated notes from Git/GitHub state;
-- remove `docs/releases/**` and every workflow/document dependency on per-version Markdown;
-- update `docs/RELEASE-MANAGEMENT.md` to describe only the current release procedure;
-- keep YarReader release-only: there is no production server deployment stage because the product artifact is local/offline;
-- do not move or rewrite any existing tag or GitHub Release.
-
-Closes F6 and F7.
 
 ### YR-051 — DOCS — Retire reconstruction-era current-tree history
 
@@ -93,7 +69,6 @@ Closes F6 and F7.
 - update README verification and documentation links to the canonical current-state commands/docs;
 - retain Git/GitHub as the authority for superseded states and release history.
 
-Closes F9, F11, and F12.
 
 ### YR-052 — TEST — Enforce repository-baseline conformance
 
@@ -105,7 +80,7 @@ Closes F9, F11, and F12.
 
 ### YR-053 — BUILD — Prepare normalized v1.1.0 release
 
-After YR-050 through YR-052 are merged and green:
+After YR-051 through YR-052 are merged and green:
 
 - set `package.json` to 1.1.0 and reproduce the final release candidate from a clean checkout;
 - move every durable rule from this plan into `AGENTS.md`, `ARCHITECTURE.md`, `CONTRIBUTING.md`, or the relevant current policy document;
