@@ -191,7 +191,7 @@ expect(pkg.type === "module", 'package.json must declare "type": "module"');
 expect(hasLine(npmrc, "engine-strict=true"), ".npmrc must enable engine-strict");
 expect(hasLine(npmrc, "strict-allow-scripts=true"), ".npmrc must enable strict install-script allowlisting");
 expect(pkg.allowScripts && typeof pkg.allowScripts === "object", "package.json must define allowScripts");
-expect(pkg.allowScripts?.["sharp@0.35.3"] === true, "sharp install scripts must be explicitly approved");
+expect(pkg.allowScripts?.["sharp@0.35.4"] === true, "sharp install scripts must be explicitly approved");
 
 expect(majorIs(dependencyVersion(pkg, "typescript"), 7), "TypeScript must remain on major 7");
 expect(majorIs(dependencyVersion(pkg, "vite"), 8), "Vite must remain on major 8");
