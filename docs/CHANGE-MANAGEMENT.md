@@ -27,6 +27,14 @@ required evidence context, not a reconstruction-era source-commit mapping.
 `Evidence` records validation or repository/provider facts that actually
 support the change. A failed validation is never represented as successful.
 
+## Planned-work lifecycle
+
+When `IMPLEMENTATION_PLAN.md` exists, it is a current/future queue rather than a completed-work ledger. Reconcile it with current `main` before selecting work, then take the first open task unless the owner explicitly overrides priority. If that first task is blocked by an unsatisfied dependency or required external/provider action, stop on that task and record the blocker; do not silently skip to later work.
+
+A planned task is retired by the controlled change that delivers it. Remove its task block in that branch/PR before merge so merged `main` cannot retain work that the merge itself completed. Update later tasks in the same change when delivery changes their scope, order, dependencies, or acceptance. If the delivered task is the final open task, delete `IMPLEMENTATION_PLAN.md` in that same change after moving only durable current-state rules into permanent documentation.
+
+After the merge succeeds, finish the same turn with a complete copy-paste kickoff prompt for the next open task, including any real dependency or blocker. If the queue is exhausted, hand off a fresh-state re-audit instead. Git/GitHub remain the authority for the task that just left the active queue.
+
 Provider-setting changes are isolated controlled work: keep the expected state
 in `config/github-repository-settings.json`, capture live GitHub state before and
 after the change, and run `npm run verify:github-settings` with authorized admin

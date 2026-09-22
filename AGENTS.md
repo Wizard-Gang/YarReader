@@ -11,11 +11,12 @@ Executable source and validated contracts define shipped behavior. Current archi
 When `IMPLEMENTATION_PLAN.md` exists, reconcile it with current `main` before choosing work:
 
 1. remove any task block whose pull request is already merged; never maintain a `Done`, completed, or historical task list in the plan;
-2. treat the first remaining open task as the default next assignment before unrelated repository work, unless the owner explicitly overrides the plan;
+2. treat the first remaining open task as the default next assignment before unrelated repository work, unless the owner explicitly overrides the plan; if that first task is blocked by an unsatisfied dependency or required external/provider action, stop on that task and report the blocker instead of silently skipping ahead;
 3. keep only current and future state in the plan: active scope, current findings, decisions, dependencies, open tasks, and acceptance expectations;
 4. update the plan in the same controlled change whenever delivery changes future scope, ordering, dependencies, or acceptance criteria;
-5. after a planned task merges successfully, its task block becomes Git/GitHub history and must be purged at the start of the next controlled change before other implementation work;
-6. retire the plan entirely when no open planned task remains, moving only durable current-state rules into their permanent authority.
+5. retire a planned task in its own delivering controlled change: remove that task block before merge so accepted `main` never retains work that the merge itself completed;
+6. when the delivering change removes the final open task, delete `IMPLEMENTATION_PLAN.md` in that same change, moving only durable current-state rules into their permanent authority;
+7. after a successful merge, finish the same turn with a complete copy-paste prompt for the next open planned task, including any real dependency or blocker; when no task remains, hand off the required fresh-state re-audit instead.
 
 Do not create parallel legacy, completed-task, or migration-history Markdown to replace information removed from the active plan.
 
@@ -25,10 +26,11 @@ When the owner says `do needful` (or an equivalent instruction to continue), do 
 
 1. fetch current `main` and reconcile it with open pull requests and `IMPLEMENTATION_PLAN.md`;
 2. merge any already-green/current authoritative PR first when merging is possible;
-3. purge merged task blocks and resolved findings from the active plan;
-4. select the first remaining open planned task unless the owner explicitly changes priority;
+3. remove task blocks that earlier merges already completed and reconcile resolved findings before selecting new work;
+4. select the first remaining open planned task unless the owner explicitly changes priority; if that first task is blocked, stop there and surface the blocker rather than choosing a later task;
 5. carry that task through branch → implementation → validation → controlled commit → pull request → exact-head CI → merge;
-6. after a successful merge, finish the session with a copy-paste prompt for the next open planned task, including the required purge step and any real blocker/dependency.
+6. include retirement of the delivered task in that same controlled change, deleting `IMPLEMENTATION_PLAN.md` instead when it is the final open task;
+7. after a successful merge, finish the same turn with a complete copy-paste kickoff prompt for the next open planned task, or with the required fresh-state re-audit prompt when the queue is exhausted.
 
 A `do needful` instruction is not permission to fabricate provider changes, validations, releases, or merges that the available session cannot actually perform. If a required external/admin action is unavailable, preserve the controlled branch/PR truthfully and make that blocker the first requirement in the handoff prompt.
 

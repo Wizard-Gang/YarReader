@@ -6,16 +6,6 @@ YarReader remains an offline, portable `file://` reader: hosted deployment, a Wo
 
 ## Open tasks
 
-### YR-055 — [DOCS] Retire planned work in its delivering merge
-
-- Dependency: YR-054 merged on `main`.
-- Why: `AGENTS.md` and `CONTRIBUTING.md` still defer completed-task removal until the next controlled change, leaving accepted work in the active queue.
-- Scope: Make same-delivery task retirement, first-blocked-task behavior, queue deletion, and one-turn handoff agree with WG-ARCH-001. Remove this task in its PR.
-- Non-goals: No application or release change.
-- Acceptance: Merged `main` cannot retain the delivered task; a blocked first task is not silently skipped.
-- Validation: `npm run check`; `git diff --check`.
-- Authorities: `AGENTS.md`, `CONTRIBUTING.md`, `docs/CHANGE-MANAGEMENT.md`.
-
 ### YR-056 — [DOCS] Document the offline command contract
 
 - Dependency: YR-055 merged.
