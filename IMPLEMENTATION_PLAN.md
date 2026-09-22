@@ -6,16 +6,6 @@ YarReader remains an offline, portable `file://` reader: hosted deployment, a Wo
 
 ## Open tasks
 
-### YR-061 — [TEST] Guard the offline release boundary with local cases
-
-- Dependency: YR-060 merged.
-- Why: The release workflow checks annotated semantic tags and package identity, but local tests do not guard that boundary against workflow drift.
-- Scope: Add focused release-identity cases for tag syntax, annotation, exact checkout and package-version agreement; wire them into `check`.
-- Non-goals: No tag, GitHub Release, hosted deploy or publication in this task.
-- Acceptance: A mismatched or lightweight tag is rejected before publication; valid exact-tag input passes.
-- Validation: Focused release cases; `npm run check`; `git diff --check`.
-- Authorities: `.github/workflows/release.yml`, `docs/RELEASE-MANAGEMENT.md`.
-
 ### YR-062 — [SEC] Resolve the current high-severity Sharp advisory
 
 - Dependency: YR-061 merged.

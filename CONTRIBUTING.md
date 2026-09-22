@@ -48,17 +48,20 @@ documentation and behavior ever disagree.
 - `npm run check` is the credential-free local acceptance gate. It runs
   non-emitting `typecheck`, then `test` once; `test` owns the single
   production build before the Node/browser suites and includes pure local
-  repository-settings comparison cases. It then runs controlled-history,
-  public-safety, and repository-baseline checks. The settings cases use only
-  committed local fixtures/configuration and do not call GitHub.
+  repository-settings comparison cases plus disposable-Git release-identity
+  cases. It then runs controlled-history, public-safety, and repository-baseline
+  checks. The settings and release-identity cases use only committed local
+  fixtures/configuration and do not call GitHub.
 - `npm run verify:github-settings` is a separate provider/network-aware
   comparison against `config/github-repository-settings.json`. Use authorized
   GitHub API credentials when required to read the repository/rulesets. It does
   not change settings.
 - Release publication is not part of `check` or ordinary controlled delivery.
-  Pushing an annotated semantic tag that exactly matches `package.json` triggers
-  `.github/workflows/release.yml`; the workflow verifies the tag and creates the
-  GitHub Release. Follow `docs/RELEASE-MANAGEMENT.md`.
+  `test:release` exercises the shared release-identity validator entirely in
+  disposable local Git repositories. Pushing an annotated semantic tag that
+  exactly matches `package.json` triggers `.github/workflows/release.yml`; the
+  workflow fetches that exact tag, invokes the same validator, and only then
+  creates the GitHub Release. Follow `docs/RELEASE-MANAGEMENT.md`.
 - Hosted deployment is N/A. YarReader has no production environment, Worker, or
   hosted application lifecycle; the product remains local/offline and portable
   through `file://`.

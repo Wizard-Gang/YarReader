@@ -19,38 +19,14 @@ jobs:
         with:
           node-version-file: .node-version
           cache: npm
-      - name: Validate exact semantic annotated tag
+      - name: Fetch exact release tag
         shell: bash
         run: |
           set -euo pipefail
-
-          tag="$GITHUB_REF_NAME"
-          tag_ref="refs/tags/$tag"
-
-          if [[ ! "$tag" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ ]]; then
-            echo "::error::Release tag must be semantic and start with v: $tag"
-            exit 1
-          fi
-
+          tag_ref="refs/tags/$GITHUB_REF_NAME"
           git fetch --force --no-tags origin "$tag_ref:$tag_ref"
-
-          if [[ "$(git cat-file -t "$tag_ref")" != "tag" ]]; then
-            echo "::error::Release tag must be annotated: $tag"
-            exit 1
-          fi
-
-          tagged_commit="$(git rev-parse "$tag_ref^{commit}")"
-          checked_out_commit="$(git rev-parse HEAD)"
-          if [[ "$checked_out_commit" != "$tagged_commit" ]]; then
-            echo "::error::Checkout is not the commit identified by $tag"
-            exit 1
-          fi
-
-          package_version="$(node -p "JSON.parse(require('node:fs').readFileSync('package.json', 'utf8')).version")"
-          if [[ "$tag" != "v$package_version" ]]; then
-            echo "::error::Tag $tag does not match package.json version $package_version"
-            exit 1
-          fi
+      - name: Validate exact semantic annotated tag
+        run: node scripts/validate-release-identity.mjs "$GITHUB_REF_NAME"
       - name: Install exact dependencies
         run: npm ci
       - name: Verify tagged state
