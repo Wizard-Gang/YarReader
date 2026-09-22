@@ -6,16 +6,6 @@ YarReader remains an offline, portable `file://` reader: hosted deployment, a Wo
 
 ## Open tasks
 
-### YR-057 — [BUILD] Make `typecheck` non-emitting
-
-- Dependency: YR-056 merged.
-- Why: `typecheck` invokes the emitting `tsconfig.json`, unlike the shared command contract.
-- Scope: Add a no-emit invocation for the Node program while retaining viewer/browser-test coverage; leave production emit to `build`.
-- Non-goals: No source migration or test-runner change.
-- Acceptance: `typecheck` checks all applicable programs and does not write `dist`.
-- Validation: Focused no-emit check; `npm run typecheck`; `npm run check`; `git diff --check`.
-- Authorities: `package.json`, `tsconfig*.json`.
-
 ### YR-058 — [BUILD] Execute the production build once per `check`
 
 - Dependency: YR-057 merged.

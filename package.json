@@ -23,7 +23,7 @@
     "check:history": "node scripts/check-controlled-history.mjs",
     "check:safety": "node scripts/check-public-safety.mjs",
     "check:baseline": "node scripts/check-repository-baseline.mjs",
-    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.viewer.json --noEmit && tsc -p tsconfig.browser-test.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.viewer.json --noEmit && tsc -p tsconfig.browser-test.json --noEmit",
     "test:node": "node --test --test-reporter=spec 'dist/test/**/*.test.js'",
     "test:browser": "tsc -p tsconfig.browser-test.json --noEmit && vitest run",
     "test": "npm run build && npm run test:node && npm run test:browser",
