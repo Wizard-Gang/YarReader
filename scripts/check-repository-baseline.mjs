@@ -157,7 +157,7 @@ for (const command of requiredCommands) {
 }
 expect(pkg.scripts?.dev === "vite --config vite.viewer.config.ts", "dev must remain the local-only synthetic Vite preview");
 expect(pkg.scripts?.build === "tsc -p tsconfig.json && vite build --config vite.viewer.config.ts", "build must remain deterministic and deployment-free");
-expect(pkg.scripts?.typecheck?.includes("tsconfig.json"), "typecheck must include the primary TypeScript program");
+expect(pkg.scripts?.typecheck?.includes("tsc -p tsconfig.json --noEmit"), "typecheck must validate the primary TypeScript program without emitting");
 expect(pkg.scripts?.typecheck?.includes("tsconfig.viewer.json"), "typecheck must include the viewer TypeScript program");
 expect(pkg.scripts?.typecheck?.includes("tsconfig.browser-test.json"), "typecheck must include the browser-test/tooling TypeScript program");
 expect(pkg.scripts?.check?.includes("npm run check:history"), "check must include controlled-history validation");

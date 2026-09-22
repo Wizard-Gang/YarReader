@@ -16,16 +16,22 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { JSDOM, type DOMWindow } from "jsdom";
 import sharp from "sharp";
-import { classify } from "../../dist/src/classification.js";
-import { exportLibrary, materializePortableExport } from "../../dist/src/export.js";
-import { normalize } from "../../dist/src/normalization.js";
-import { CatalogStore } from "../../dist/src/catalog.js";
-import { initializePaths, resolvePaths } from "../../dist/src/paths.js";
-import { scan } from "../../dist/src/scanner.js";
-import { createBundleFromFiles } from "../../dist/src/zip.js";
+
+type ClassificationModule = typeof import("../../src/classification.js");
+type ExportModule = typeof import("../../src/export.js");
+type NormalizationModule = typeof import("../../src/normalization.js");
+type CatalogModule = typeof import("../../src/catalog.js");
+type PathsModule = typeof import("../../src/paths.js");
+type ScannerModule = typeof import("../../src/scanner.js");
+type ZipModule = typeof import("../../src/zip.js");
 
 /* Vitest runs from the repository root, which is this config's project root. */
 const REPOSITORY_ROOT = process.cwd();
+
+async function builtModule<T>(filename: string): Promise<T> {
+  const href = pathToFileURL(path.join(REPOSITORY_ROOT, "dist", "src", filename)).href;
+  return import(href) as Promise<T>;
+}
 
 interface ViteManifestEntry {
   readonly file: string;
@@ -107,6 +113,23 @@ function comicInfo(series: string, number: number): Buffer {
  * ingestion pipeline, then materialize it as a standalone copied directory.
  */
 export async function buildPortableFixture(): Promise<PortableFixture> {
+  const [
+    { classify },
+    { exportLibrary, materializePortableExport },
+    { normalize },
+    { CatalogStore },
+    { initializePaths, resolvePaths },
+    { scan },
+    { createBundleFromFiles },
+  ] = await Promise.all([
+    builtModule<ClassificationModule>("classification.js"),
+    builtModule<ExportModule>("export.js"),
+    builtModule<NormalizationModule>("normalization.js"),
+    builtModule<CatalogModule>("catalog.js"),
+    builtModule<PathsModule>("paths.js"),
+    builtModule<ScannerModule>("scanner.js"),
+    builtModule<ZipModule>("zip.js"),
+  ]);
   const workspace = await mkdtemp(path.join(os.tmpdir(), "yarreader-browser-"));
   const paths = await resolvePaths(path.join(workspace, "media"));
   await initializePaths(paths);

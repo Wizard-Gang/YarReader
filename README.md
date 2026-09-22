@@ -28,7 +28,7 @@ Install the pinned dependency graph first with `npm ci`. The repository pins Nod
 | Command | Use it for | Current side effects / prerequisites |
 | --- | --- | --- |
 | `npm run dev` | Interactive viewer development | Starts Vite on `127.0.0.1:5173` and opens `/dev/viewer/index.html`. It is a local development server only; it is not a hosted-production lifecycle and does not run repository acceptance. |
-| `npm run typecheck` | Type-checking the Node, viewer, and browser-test programs | The Node/test `tsconfig.json` invocation currently emits compiled output into `dist`; the viewer and browser-test checks are no-emit. This emitting behavior is temporary current state, not the desired long-term contract. |
+| `npm run typecheck` | Type-checking the Node, viewer, and browser-test programs | All three TypeScript invocations are validation-only and use `--noEmit`; running this command does not create production/compiler output in `dist`. |
 | `npm test` / `npm run test` | Node and browser test suites | Runs `npm run build` first, so it writes production/compiler output to `dist`, then runs Node tests from `dist/test` and Vitest browser-module/DOM tests. |
 | `npm run build` | Production build output | Compiles the Node/test TypeScript program into `dist` and builds the viewer bundle into `dist/viewer`. It does not run the test suites. |
 | `npm run check` | Credential-free local repository acceptance | Runs `typecheck`, `test`, another `build`, controlled-history validation, public-safety validation, and repository-baseline validation. It does not contact GitHub for live settings. |
@@ -37,9 +37,8 @@ Install the pinned dependency graph first with `npm ci`. The repository pins Nod
 The current command graph intentionally still contains temporary duplicate work:
 `test` performs one full production build, `check` performs another after
 `test`, and CI performs a third standalone `npm run build` after `check`.
-In addition, the current `typecheck` command emits the Node/test program. Later
-planned build tasks own removal of that duplication; documentation here describes
-the current executable truth.
+Later planned build work owns removal of the duplicate production builds;
+documentation here describes the current executable truth.
 
 Before opening a pull request, run:
 

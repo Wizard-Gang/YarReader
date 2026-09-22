@@ -37,9 +37,9 @@ documentation and behavior ever disagree.
 
 - `npm run dev` starts only the local Vite viewer development server on
   `127.0.0.1:5173`; it is not a hosted-production or deployment lifecycle.
-- `npm run typecheck` checks the Node, viewer, and browser-test programs. The
-  current Node/test `tsconfig.json` invocation emits into `dist`; the other two
-  invocations use `--noEmit`. YR-057 owns changing that behavior.
+- `npm run typecheck` checks the Node, viewer, and browser-test programs with
+  `--noEmit` for every TypeScript invocation, so it does not write production or
+  compiler output to `dist`.
 - `npm test` and `npm run test` are equivalent. They run a full
   `npm run build` first, then Node tests from compiled `dist/test` output and
   the Vitest browser-module/DOM suite.
@@ -62,9 +62,8 @@ documentation and behavior ever disagree.
 
 The present command graph has known temporary duplication: `test` performs one
 full production build, `check` performs a second after `test`, and CI performs
-a third standalone `npm run build` after `check`. `typecheck` also currently
-emits the Node/test program. YR-057 and YR-058 own changing those mechanics; do
-not normalize them opportunistically in documentation-only changes.
+a third standalone `npm run build` after `check`. YR-058 owns changing that
+build duplication; do not normalize it opportunistically in unrelated changes.
 
 Pipeline and filesystem tests remain on `node:test`; Vitest 5 owns tests that need
 TypeScript browser modules or a DOM. Keep that split when adding or moving tests.
