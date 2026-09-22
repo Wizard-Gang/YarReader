@@ -6,16 +6,6 @@ YarReader remains an offline, portable `file://` reader: hosted deployment, a Wo
 
 ## Open tasks
 
-### YR-062 — [SEC] Resolve the current high-severity Sharp advisory
-
-- Dependency: YR-061 merged.
-- Why: Fresh `npm ci`/`npm audit` reports a high-severity `sharp` advisory in the current lockfile.
-- Scope: Review and update only the affected Sharp version/range and lockfile to a compatible fixed version; preserve image processing and the offline product boundary.
-- Non-goals: No broad dependency sweep or new runtime network requirement.
-- Acceptance: `npm audit --audit-level=high` passes and image/reader tests remain green.
-- Validation: `npm ci`; `npm audit --audit-level=high`; `npm run check`; `git diff --check`.
-- Authorities: `package.json`, package lock, image tests.
-
 ### YR-063 — [BUILD] Keep dependency advisories as an explicit CI gate
 
 - Dependency: YR-062 merged.
