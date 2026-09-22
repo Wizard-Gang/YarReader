@@ -118,6 +118,8 @@ const requiredFiles = [
   "vitest.config.ts",
   ".github/workflows/ci.yml",
   ".github/workflows/release.yml",
+  "scripts/validate-release-identity.mjs",
+  "test/release-identity.test.mjs",
   "config/github-repository-settings.json",
   "docs/CHANGE-MANAGEMENT.md",
   "docs/RELEASE-MANAGEMENT.md",
@@ -143,6 +145,8 @@ const [
   architecture,
   ci,
   release,
+  releaseIdentityValidator,
+  releaseIdentityTest,
   viteConfig,
   exportSource,
   exportAssets,
@@ -163,6 +167,8 @@ const [
   read("ARCHITECTURE.md"),
   read(".github/workflows/ci.yml"),
   read(".github/workflows/release.yml"),
+  read("scripts/validate-release-identity.mjs"),
+  read("test/release-identity.test.mjs"),
   read("vite.viewer.config.ts"),
   read("src/export.ts"),
   read("src/export-assets.ts"),
@@ -200,6 +206,7 @@ const requiredCommands = [
   "test:node",
   "test:browser",
   "test:settings",
+  "test:release",
   "test",
   "check",
   "check:history",
@@ -216,7 +223,8 @@ expect(pkg.scripts?.typecheck?.includes("tsc -p tsconfig.json --noEmit"), "typec
 expect(pkg.scripts?.typecheck?.includes("tsconfig.viewer.json"), "typecheck must include the viewer TypeScript program");
 expect(pkg.scripts?.typecheck?.includes("tsconfig.browser-test.json"), "typecheck must include the browser-test/tooling TypeScript program");
 expect(pkg.scripts?.["test:settings"] === "node --test --test-reporter=spec test/github-settings-policy.test.mjs", "test:settings must run the credential-free repository-settings policy cases");
-expect(pkg.scripts?.test === "npm run build && npm run test:node && npm run test:settings && npm run test:browser", "test must own exactly one production build and run Node, settings, and browser suites once");
+expect(pkg.scripts?.["test:release"] === "node --test --test-reporter=spec test/release-identity.test.mjs", "test:release must run the credential-free release-identity cases");
+expect(pkg.scripts?.test === "npm run build && npm run test:node && npm run test:settings && npm run test:release && npm run test:browser", "test must own exactly one production build and run Node, settings, release, and browser suites once");
 expect(pkg.scripts?.check === "npm run typecheck && npm test && npm run check:history && npm run check:safety && npm run check:baseline", "check must invoke the self-contained test command once without a redundant direct build");
 expect(pkg.scripts?.check?.includes("npm run check:history"), "check must include controlled-history validation");
 expect(pkg.scripts?.check?.includes("npm run check:safety"), "check must include public-safety validation");
@@ -260,8 +268,16 @@ expect(!ci.includes("- run: npm run build"), "CI must not repeat the production 
 expect(ci.includes("Validate pull-request title"), "CI must validate controlled pull-request titles");
 
 expect(release.includes("tags: ['v*']"), "release workflow must be tag-driven");
-expect(release.includes('git cat-file -t "$tag_ref"'), "release workflow must require annotated tags");
-expect(release.includes('if [[ "$tag" != "v$package_version" ]]'), "release workflow must match the tag to package.json version");
+expect(release.includes('git fetch --force --no-tags origin "$tag_ref:$tag_ref"'), "release workflow must fetch the exact pushed tag ref before local identity validation");
+expect(release.includes('node scripts/validate-release-identity.mjs "$GITHUB_REF_NAME"'), "release workflow must delegate tag identity validation to the shared local authority");
+expect(!release.includes("git cat-file -t"), "release workflow must not duplicate annotated-tag validation outside the shared authority");
+expect(!release.includes("package_version="), "release workflow must not duplicate package-version validation outside the shared authority");
+expect(releaseIdentityValidator.includes("validateReleaseIdentity"), "release identity validator must expose the shared validation boundary");
+expect(releaseIdentityValidator.includes("isSemanticReleaseTag"), "release identity validator must own semantic tag syntax");
+expect(!releaseIdentityValidator.includes("fetch("), "release identity validator must not call the network");
+expect(!releaseIdentityValidator.includes("gh release"), "release identity validator must not publish through GitHub");
+expect(releaseIdentityTest.includes("validateReleaseIdentity"), "release identity tests must exercise the shared validation boundary");
+expect(releaseIdentityTest.includes(".github/workflows/release.yml"), "release identity tests must guard workflow delegation to the shared validation boundary");
 expect(release.includes("npm ci"), "release workflow must install exact dependencies");
 expect(release.includes("npm run check"), "release workflow must run the repository gate");
 expect(release.includes("--generate-notes"), "GitHub Releases must use GitHub-generated notes");

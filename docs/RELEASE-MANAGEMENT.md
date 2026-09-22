@@ -24,10 +24,11 @@ reader that opens from `file://`.
 3. Confirm `package.json` contains the intended semantic version.
 4. Create an annotated `v<package-version>` tag on that exact commit and push
    the tag. Never move or replace a published tag.
-5. The `Release` workflow checks out the exact pushed tag, proves that the tag
-   is semantic and annotated, verifies that `package.json` matches it, runs
-   `npm ci` and `npm run check`, and creates the GitHub Release with notes
-   generated from Git/GitHub state.
+5. The `Release` workflow checks out and fetches the exact pushed tag, then
+   invokes `scripts/validate-release-identity.mjs` to prove locally that the tag
+   is semantic and annotated, resolves to the checked-out commit, and matches
+   `package.json`. It then runs `npm ci` and `npm run check` and creates the
+   GitHub Release with notes generated from Git/GitHub state.
 6. Verify the Release workflow and resulting GitHub Release.
 
 Published tags and GitHub Releases are immutable. Corrections move forward
