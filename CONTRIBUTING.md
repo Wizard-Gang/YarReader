@@ -2,7 +2,7 @@
 
 ## Active plan
 
-When `IMPLEMENTATION_PLAN.md` exists, its first open task is the default next repository change unless the owner explicitly overrides it. The plan is current/future-only: remove already-merged task blocks at the start of the next controlled change, update remaining tasks when future scope changes, and do not maintain a completed-task or legacy implementation log.
+When `IMPLEMENTATION_PLAN.md` exists, reconcile it with current `main` before choosing work. Its first open task is the default next repository change unless the owner explicitly overrides it. If that first task is blocked by an unsatisfied dependency or required external/provider action, stop on it and report the blocker; do not silently skip to a later task. The plan is current/future-only: remove task blocks already completed by earlier merges during reconciliation, retire the task being delivered in that task's own controlled PR, update remaining tasks when future scope changes, and never maintain a completed-task or legacy implementation log. Delete `IMPLEMENTATION_PLAN.md` in the controlled change that delivers its final task. After a planned change merges, finish the same turn with a complete copy-paste kickoff prompt for the next open task, or a fresh-state re-audit prompt when the queue is exhausted.
 
 ## Change flow
 
