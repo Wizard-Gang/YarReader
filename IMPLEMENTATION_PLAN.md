@@ -1,0 +1,101 @@
+# Active implementation plan
+
+This is YarReader's current/future process-parity wave under WG-ARCH-001 §27 as accepted in `SouthernGentlemen/wizardgang-architecture-demo`. It takes priority over unqueued improvements. On `do needful`, fetch `main`, open PRs and exact-head CI; finish a green/current authoritative PR first, otherwise deliver only the first task. Each delivering PR removes its own block, adjusts later blocks when evidence changes, and ends with a prompt for the next task. Delete this file with its final task. Git/GitHub retain completed work.
+
+YarReader remains an offline, portable `file://` reader: hosted deployment, a Worker, production environment and `npm run dev` server lifecycle are N/A. Its browser viewer, transactional filesystem/archive behavior, public-history safety gate, annotated releases and provider settings remain applicable. Use the repository's current merge policy; do not publish v1.1.0 merely because the package version has been prepared. Target one narrow outcome per web turn; re-audit from fresh state when this wave ends.
+
+## Open tasks
+
+### YR-055 — [DOCS] Retire planned work in its delivering merge
+
+- Dependency: YR-054 merged on `main`.
+- Why: `AGENTS.md` and `CONTRIBUTING.md` still defer completed-task removal until the next controlled change, leaving accepted work in the active queue.
+- Scope: Make same-delivery task retirement, first-blocked-task behavior, queue deletion, and one-turn handoff agree with WG-ARCH-001. Remove this task in its PR.
+- Non-goals: No application or release change.
+- Acceptance: Merged `main` cannot retain the delivered task; a blocked first task is not silently skipped.
+- Validation: `npm run check`; `git diff --check`.
+- Authorities: `AGENTS.md`, `CONTRIBUTING.md`, `docs/CHANGE-MANAGEMENT.md`.
+
+### YR-056 — [DOCS] Document the offline command contract
+
+- Dependency: YR-055 merged.
+- Why: README shows `check` and `build` separately without explaining that `test`, `check`, and CI currently rebuild overlapping outputs.
+- Scope: Document `dev`, `typecheck`, `test`, `build`, `check`, provider settings verification, release publication and hosted-deploy N/A as they actually behave now; identify temporary duplicate gates for later tasks.
+- Non-goals: No command or product behavior change.
+- Acceptance: A fresh agent can choose the correct command and knows its prerequisites and side effects.
+- Validation: Compare `package.json` and workflows; `npm run check`; `git diff --check`.
+- Authorities: `README.md`, `CONTRIBUTING.md`, WG-ARCH-001 §27.
+
+### YR-057 — [BUILD] Make `typecheck` non-emitting
+
+- Dependency: YR-056 merged.
+- Why: `typecheck` invokes the emitting `tsconfig.json`, unlike the shared command contract.
+- Scope: Add a no-emit invocation for the Node program while retaining viewer/browser-test coverage; leave production emit to `build`.
+- Non-goals: No source migration or test-runner change.
+- Acceptance: `typecheck` checks all applicable programs and does not write `dist`.
+- Validation: Focused no-emit check; `npm run typecheck`; `npm run check`; `git diff --check`.
+- Authorities: `package.json`, `tsconfig*.json`.
+
+### YR-058 — [BUILD] Execute the production build once per `check`
+
+- Dependency: YR-057 merged.
+- Why: `test` builds, `check` builds again, and CI invokes `build` a third time.
+- Scope: Preserve compiled Node-test prerequisites while giving one command ownership of the build inside `check`; remove redundant CI execution.
+- Non-goals: No test deletion, viewer behavior change or release publication.
+- Acceptance: All Node/browser tests still run; `check` and CI each execute one production build.
+- Validation: `npm run check`; inspect build invocation count; `git diff --check`.
+- Authorities: `package.json`, `.github/workflows/ci.yml`, `tsconfig.json`.
+
+### YR-059 — [TEST] Check committed PR whitespace against its base
+
+- Dependency: YR-058 merged.
+- Why: CI's bare `git diff --check` can miss whitespace already committed on the PR head.
+- Scope: Use the actual PR base/head range in CI with a documented local equivalent; add a small failing fixture/test if practical.
+- Non-goals: No merge-method change.
+- Acceptance: A committed whitespace defect fails exact-head CI; clean changes pass.
+- Validation: Focused whitespace fixture; `npm run check`; `git diff --check`.
+- Authorities: `.github/workflows/ci.yml`, `CONTRIBUTING.md`.
+
+### YR-060 — [TEST] Test repository-settings comparison without credentials
+
+- Dependency: YR-059 merged.
+- Why: Live settings verification exists, but `check` has no pure regression cases for its expected/actual ruleset projection.
+- Scope: Extract/test missing, changed and matching main/tag settings without making provider calls in `check`; preserve the separate live verifier.
+- Non-goals: No provider settings mutation.
+- Acceptance: Material committed-settings drift fails local tests; live verification remains distinct.
+- Validation: Focused settings tests; `npm run check`; `npm run verify:github-settings` when authorized; `git diff --check`.
+- Authorities: `scripts/verify-github-settings.mjs`, settings baseline, `package.json`.
+
+### YR-061 — [TEST] Guard the offline release boundary with local cases
+
+- Dependency: YR-060 merged.
+- Why: The release workflow checks annotated semantic tags and package identity, but local tests do not guard that boundary against workflow drift.
+- Scope: Add focused release-identity cases for tag syntax, annotation, exact checkout and package-version agreement; wire them into `check`.
+- Non-goals: No tag, GitHub Release, hosted deploy or publication in this task.
+- Acceptance: A mismatched or lightweight tag is rejected before publication; valid exact-tag input passes.
+- Validation: Focused release cases; `npm run check`; `git diff --check`.
+- Authorities: `.github/workflows/release.yml`, `docs/RELEASE-MANAGEMENT.md`.
+
+### YR-062 — [SEC] Resolve the current high-severity Sharp advisory
+
+- Dependency: YR-061 merged.
+- Why: Fresh `npm ci`/`npm audit` reports a high-severity `sharp` advisory in the current lockfile.
+- Scope: Review and update only the affected Sharp version/range and lockfile to a compatible fixed version; preserve image processing and the offline product boundary.
+- Non-goals: No broad dependency sweep or new runtime network requirement.
+- Acceptance: `npm audit --audit-level=high` passes and image/reader tests remain green.
+- Validation: `npm ci`; `npm audit --audit-level=high`; `npm run check`; `git diff --check`.
+- Authorities: `package.json`, package lock, image tests.
+
+### YR-063 — [BUILD] Keep dependency advisories as an explicit CI gate
+
+- Dependency: YR-062 merged.
+- Why: Public-history safety is strong, but the lockfile has no current network-advisory gate in CI.
+- Scope: Add a named high-severity dependency audit to CI and local guidance, separate from credential-free/offline `check`; distinguish an advisory from registry unavailability.
+- Non-goals: No package upgrade or new runtime network requirement for the reader.
+- Acceptance: CI fails on high-severity advisories; a disconnected cloud agent reports the audit as unavailable, never green.
+- Validation: Named audit command when network exists; `npm run check`; `git diff --check`.
+- Authorities: `package.json`, `.github/workflows/ci.yml`, `SECURITY.md`.
+
+## Recheck after this wave
+
+Audit command/CI parity and process conformance from fresh `main` before another wave. Preserve the offline product boundary and decide separately whether the prepared package version should become an immutable release; a version string alone is not release authority.
