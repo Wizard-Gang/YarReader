@@ -6,16 +6,6 @@ YarReader remains an offline, portable `file://` reader: hosted deployment, a Wo
 
 ## Open tasks
 
-### YR-056 — [DOCS] Document the offline command contract
-
-- Dependency: YR-055 merged.
-- Why: README shows `check` and `build` separately without explaining that `test`, `check`, and CI currently rebuild overlapping outputs.
-- Scope: Document `dev`, `typecheck`, `test`, `build`, `check`, provider settings verification, release publication and hosted-deploy N/A as they actually behave now; identify temporary duplicate gates for later tasks.
-- Non-goals: No command or product behavior change.
-- Acceptance: A fresh agent can choose the correct command and knows its prerequisites and side effects.
-- Validation: Compare `package.json` and workflows; `npm run check`; `git diff --check`.
-- Authorities: `README.md`, `CONTRIBUTING.md`, WG-ARCH-001 §27.
-
 ### YR-057 — [BUILD] Make `typecheck` non-emitting
 
 - Dependency: YR-056 merged.
