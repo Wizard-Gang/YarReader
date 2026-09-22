@@ -29,11 +29,42 @@ Include `Rollback` for persistence, migration, archive, activation, schema,
 provider-setting, release-behavior, or other high-risk changes. A corrective
 change identifies the earlier change in its notes or a `Corrects:` trailer.
 
-Provider-aware GitHub repository settings are verified separately from credential-free `npm run check`:
+## Command contract
 
-```sh
-npm run verify:github-settings
-```
+Install dependencies with `npm ci` before the repository commands below. Treat
+the scripts in `package.json` and the workflows as executable authority when
+documentation and behavior ever disagree.
+
+- `npm run dev` starts only the local Vite viewer development server on
+  `127.0.0.1:5173`; it is not a hosted-production or deployment lifecycle.
+- `npm run typecheck` checks the Node, viewer, and browser-test programs. The
+  current Node/test `tsconfig.json` invocation emits into `dist`; the other two
+  invocations use `--noEmit`. YR-057 owns changing that behavior.
+- `npm test` and `npm run test` are equivalent. They run a full
+  `npm run build` first, then Node tests from compiled `dist/test` output and
+  the Vitest browser-module/DOM suite.
+- `npm run build` compiles the Node/test program and builds the production
+  viewer bundle under `dist`; it does not itself run tests.
+- `npm run check` is the credential-free local acceptance gate. It currently
+  runs `typecheck`, `test`, another `build`, controlled-history checks,
+  public-safety checks, and repository-baseline checks.
+- `npm run verify:github-settings` is a separate provider/network-aware
+  comparison against `config/github-repository-settings.json`. Use authorized
+  GitHub API credentials when required to read the repository/rulesets. It does
+  not change settings.
+- Release publication is not part of `check` or ordinary controlled delivery.
+  Pushing an annotated semantic tag that exactly matches `package.json` triggers
+  `.github/workflows/release.yml`; the workflow verifies the tag and creates the
+  GitHub Release. Follow `docs/RELEASE-MANAGEMENT.md`.
+- Hosted deployment is N/A. YarReader has no production environment, Worker, or
+  hosted application lifecycle; the product remains local/offline and portable
+  through `file://`.
+
+The present command graph has known temporary duplication: `test` performs one
+full production build, `check` performs a second after `test`, and CI performs
+a third standalone `npm run build` after `check`. `typecheck` also currently
+emits the Node/test program. YR-057 and YR-058 own changing those mechanics; do
+not normalize them opportunistically in documentation-only changes.
 
 Pipeline and filesystem tests remain on `node:test`; Vitest 5 owns tests that need
 TypeScript browser modules or a DOM. Keep that split when adding or moving tests.

@@ -20,7 +20,28 @@ yar --workspace /path/to/media init
 yar --workspace /path/to/media update --stable-seconds 0
 ```
 
-## Verify
+## Command contract
+
+Install the pinned dependency graph first with `npm ci`. The repository pins Node
+26.9.0 in `.node-version` and npm 11.19.1 in `package.json`.
+
+| Command | Use it for | Current side effects / prerequisites |
+| --- | --- | --- |
+| `npm run dev` | Interactive viewer development | Starts Vite on `127.0.0.1:5173` and opens `/dev/viewer/index.html`. It is a local development server only; it is not a hosted-production lifecycle and does not run repository acceptance. |
+| `npm run typecheck` | Type-checking the Node, viewer, and browser-test programs | The Node/test `tsconfig.json` invocation currently emits compiled output into `dist`; the viewer and browser-test checks are no-emit. This emitting behavior is temporary current state, not the desired long-term contract. |
+| `npm test` / `npm run test` | Node and browser test suites | Runs `npm run build` first, so it writes production/compiler output to `dist`, then runs Node tests from `dist/test` and Vitest browser-module/DOM tests. |
+| `npm run build` | Production build output | Compiles the Node/test TypeScript program into `dist` and builds the viewer bundle into `dist/viewer`. It does not run the test suites. |
+| `npm run check` | Credential-free local repository acceptance | Runs `typecheck`, `test`, another `build`, controlled-history validation, public-safety validation, and repository-baseline validation. It does not contact GitHub for live settings. |
+| `npm run verify:github-settings` | Compare live GitHub repository/ruleset settings with `config/github-repository-settings.json` | Provider/network-aware and separate from `check`; use GitHub API credentials with enough access to read the repository and rulesets when required. The command verifies only and does not mutate settings. |
+
+The current command graph intentionally still contains temporary duplicate work:
+`test` performs one full production build, `check` performs another after
+`test`, and CI performs a third standalone `npm run build` after `check`.
+In addition, the current `typecheck` command emits the Node/test program. Later
+planned build tasks own removal of that duplication; documentation here describes
+the current executable truth.
+
+Before opening a pull request, run:
 
 ```bash
 npm ci
@@ -29,12 +50,15 @@ npm run build
 git diff --check
 ```
 
-`npm run check` is the credential-free repository acceptance gate. Provider-aware
-GitHub settings verification is separate:
+Release publication is separate from ordinary development and acceptance. An
+annotated semantic-version tag matching `package.json` triggers the Release
+workflow, which verifies the exact tag state and creates the GitHub Release.
+Preparing a version string does not publish a release; see
+[Release management](docs/RELEASE-MANAGEMENT.md).
 
-```bash
-npm run verify:github-settings
-```
+YarReader has no hosted production deployment, Worker, or production-environment
+lifecycle. The released product remains the local/offline CLI plus portable static
+reader that opens through `file://`.
 
 ## Structure
 
