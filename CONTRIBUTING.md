@@ -45,9 +45,10 @@ documentation and behavior ever disagree.
   the Vitest browser-module/DOM suite.
 - `npm run build` compiles the Node/test program and builds the production
   viewer bundle under `dist`; it does not itself run tests.
-- `npm run check` is the credential-free local acceptance gate. It currently
-  runs `typecheck`, `test`, another `build`, controlled-history checks,
-  public-safety checks, and repository-baseline checks.
+- `npm run check` is the credential-free local acceptance gate. It runs
+  non-emitting `typecheck`, then `test` once; `test` owns the single
+  production build before the Node/browser suites. It then runs
+  controlled-history, public-safety, and repository-baseline checks.
 - `npm run verify:github-settings` is a separate provider/network-aware
   comparison against `config/github-repository-settings.json`. Use authorized
   GitHub API credentials when required to read the repository/rulesets. It does
@@ -60,10 +61,9 @@ documentation and behavior ever disagree.
   hosted application lifecycle; the product remains local/offline and portable
   through `file://`.
 
-The present command graph has known temporary duplication: `test` performs one
-full production build, `check` performs a second after `test`, and CI performs
-a third standalone `npm run build` after `check`. YR-058 owns changing that
-build duplication; do not normalize it opportunistically in unrelated changes.
+The acceptance graph performs one production build: `test` owns it before the
+Node and browser suites, `check` invokes `test` once without rebuilding, and
+CI runs `check` without a separate production-build step.
 
 Pipeline and filesystem tests remain on `node:test`; Vitest 5 owns tests that need
 TypeScript browser modules or a DOM. Keep that split when adding or moving tests.
@@ -73,7 +73,6 @@ Before opening a pull request, run:
 ```sh
 npm ci
 npm run check
-npm run build
 git diff --check
 ```
 

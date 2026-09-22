@@ -6,16 +6,6 @@ YarReader remains an offline, portable `file://` reader: hosted deployment, a Wo
 
 ## Open tasks
 
-### YR-058 — [BUILD] Execute the production build once per `check`
-
-- Dependency: YR-057 merged.
-- Why: `test` builds, `check` builds again, and CI invokes `build` a third time.
-- Scope: Preserve compiled Node-test prerequisites while giving one command ownership of the build inside `check`; remove redundant CI execution.
-- Non-goals: No test deletion, viewer behavior change or release publication.
-- Acceptance: All Node/browser tests still run; `check` and CI each execute one production build.
-- Validation: `npm run check`; inspect build invocation count; `git diff --check`.
-- Authorities: `package.json`, `.github/workflows/ci.yml`, `tsconfig.json`.
-
 ### YR-059 — [TEST] Check committed PR whitespace against its base
 
 - Dependency: YR-058 merged.

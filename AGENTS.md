@@ -58,7 +58,7 @@ Unless a task explicitly stops earlier or explicitly says not to merge, a contro
 
 1. the branch is based on current `main` and contains only the assigned YR ID;
 2. every modified, deleted, and untracked file is accounted for and unrelated work is preserved;
-3. `npm ci`, `npm run check`, `npm run build`, and `git diff --check` pass;
+3. `npm ci`, `npm run check`, and `git diff --check` pass;
 4. the controlled commit and current documentation accurately record validation that actually occurred;
 5. the branch is pushed and a pull request is opened with the matching controlled title;
 6. required CI is green on the current PR head and the PR is still current/mergeable;

@@ -27,7 +27,7 @@
     "test:node": "node --test --test-reporter=spec 'dist/test/**/*.test.js'",
     "test:browser": "tsc -p tsconfig.browser-test.json --noEmit && vitest run",
     "test": "npm run build && npm run test:node && npm run test:browser",
-    "check": "npm run typecheck && npm test && npm run build && npm run check:history && npm run check:safety && npm run check:baseline",
+    "check": "npm run typecheck && npm test && npm run check:history && npm run check:safety && npm run check:baseline",
     "verify:github-settings": "node scripts/verify-github-settings.mjs",
     "dev": "vite --config vite.viewer.config.ts"
   },

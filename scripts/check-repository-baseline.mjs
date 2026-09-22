@@ -160,6 +160,8 @@ expect(pkg.scripts?.build === "tsc -p tsconfig.json && vite build --config vite.
 expect(pkg.scripts?.typecheck?.includes("tsc -p tsconfig.json --noEmit"), "typecheck must validate the primary TypeScript program without emitting");
 expect(pkg.scripts?.typecheck?.includes("tsconfig.viewer.json"), "typecheck must include the viewer TypeScript program");
 expect(pkg.scripts?.typecheck?.includes("tsconfig.browser-test.json"), "typecheck must include the browser-test/tooling TypeScript program");
+expect(pkg.scripts?.test === "npm run build && npm run test:node && npm run test:browser", "test must own exactly one production build before the Node/browser suites");
+expect(pkg.scripts?.check === "npm run typecheck && npm test && npm run check:history && npm run check:safety && npm run check:baseline", "check must invoke the self-contained test command once without a redundant direct build");
 expect(pkg.scripts?.check?.includes("npm run check:history"), "check must include controlled-history validation");
 expect(pkg.scripts?.check?.includes("npm run check:safety"), "check must include public-safety validation");
 expect(pkg.scripts?.check?.includes("npm run check:baseline"), "check must include repository-baseline validation");
@@ -180,9 +182,10 @@ expect(!(await exists("docs/history")), "docs/history/** must not return");
 expect(ci.includes("pull_request:"), "CI must run for pull requests");
 expect(ci.includes("branches: [main]"), "CI must run for pushes to main");
 expect(ci.includes("node-version-file: .node-version"), "CI must use .node-version");
-for (const command of ["npm ci", "npm run check", "npm run build", "git diff --check"]) {
+for (const command of ["npm ci", "npm run check", "git diff --check"]) {
   expect(ci.includes(`- run: ${command}`), `CI must run ${command}`);
 }
+expect(!ci.includes("- run: npm run build"), "CI must not repeat the production build already owned by check -> test");
 expect(ci.includes("Validate pull-request title"), "CI must validate controlled pull-request titles");
 
 expect(release.includes("tags: ['v*']"), "release workflow must be tag-driven");
