@@ -150,6 +150,9 @@ const [
   security,
   exportValidation,
   portableTest,
+  githubSettingsPolicy,
+  githubSettingsVerifier,
+  githubSettingsTest,
 ] = await Promise.all([
   read("package.json"),
   read(".node-version"),
@@ -167,6 +170,9 @@ const [
   read("src/export-security.ts"),
   read("src/export-validation.ts"),
   read("test/browser/portable-independence.test.ts"),
+  read("scripts/github-settings-policy.mjs"),
+  read("scripts/verify-github-settings.mjs"),
+  read("test/github-settings-policy.test.mjs"),
 ]);
 
 const pkg = JSON.parse(packageText);
@@ -193,6 +199,7 @@ const requiredCommands = [
   "typecheck",
   "test:node",
   "test:browser",
+  "test:settings",
   "test",
   "check",
   "check:history",
@@ -208,11 +215,18 @@ expect(pkg.scripts?.build === "tsc -p tsconfig.json && vite build --config vite.
 expect(pkg.scripts?.typecheck?.includes("tsc -p tsconfig.json --noEmit"), "typecheck must validate the primary TypeScript program without emitting");
 expect(pkg.scripts?.typecheck?.includes("tsconfig.viewer.json"), "typecheck must include the viewer TypeScript program");
 expect(pkg.scripts?.typecheck?.includes("tsconfig.browser-test.json"), "typecheck must include the browser-test/tooling TypeScript program");
-expect(pkg.scripts?.test === "npm run build && npm run test:node && npm run test:browser", "test must own exactly one production build before the Node/browser suites");
+expect(pkg.scripts?.["test:settings"] === "node --test --test-reporter=spec test/github-settings-policy.test.mjs", "test:settings must run the credential-free repository-settings policy cases");
+expect(pkg.scripts?.test === "npm run build && npm run test:node && npm run test:settings && npm run test:browser", "test must own exactly one production build and run Node, settings, and browser suites once");
 expect(pkg.scripts?.check === "npm run typecheck && npm test && npm run check:history && npm run check:safety && npm run check:baseline", "check must invoke the self-contained test command once without a redundant direct build");
 expect(pkg.scripts?.check?.includes("npm run check:history"), "check must include controlled-history validation");
 expect(pkg.scripts?.check?.includes("npm run check:safety"), "check must include public-safety validation");
 expect(pkg.scripts?.check?.includes("npm run check:baseline"), "check must include repository-baseline validation");
+expect(!pkg.scripts?.check?.includes("verify:github-settings"), "check must remain credential-free and must not invoke the live GitHub settings verifier");
+expect(githubSettingsPolicy.includes("compareGithubRepositorySettings"), "repository-settings policy must expose the pure comparison boundary");
+expect(!githubSettingsPolicy.includes("fetch("), "repository-settings policy comparison must not call the network");
+expect(githubSettingsVerifier.includes('from "./github-settings-policy.mjs"'), "live settings verifier must reuse the pure comparison boundary");
+expect(githubSettingsVerifier.includes("fetch("), "live settings verifier must remain the explicit provider/network boundary");
+expect(githubSettingsTest.includes("compareGithubRepositorySettings"), "settings tests must exercise the shared pure comparison boundary");
 
 for (const [name, text] of [
   ["tsconfig.json", tsconfigText],

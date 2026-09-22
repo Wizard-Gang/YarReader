@@ -6,16 +6,6 @@ YarReader remains an offline, portable `file://` reader: hosted deployment, a Wo
 
 ## Open tasks
 
-### YR-060 — [TEST] Test repository-settings comparison without credentials
-
-- Dependency: YR-059 merged.
-- Why: Live settings verification exists, but `check` has no pure regression cases for its expected/actual ruleset projection.
-- Scope: Extract/test missing, changed and matching main/tag settings without making provider calls in `check`; preserve the separate live verifier.
-- Non-goals: No provider settings mutation.
-- Acceptance: Material committed-settings drift fails local tests; live verification remains distinct.
-- Validation: Focused settings tests; `npm run check`; `npm run verify:github-settings` when authorized; `git diff --check`.
-- Authorities: `scripts/verify-github-settings.mjs`, settings baseline, `package.json`.
-
 ### YR-061 — [TEST] Guard the offline release boundary with local cases
 
 - Dependency: YR-060 merged.

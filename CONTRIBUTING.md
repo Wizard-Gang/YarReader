@@ -47,8 +47,10 @@ documentation and behavior ever disagree.
   viewer bundle under `dist`; it does not itself run tests.
 - `npm run check` is the credential-free local acceptance gate. It runs
   non-emitting `typecheck`, then `test` once; `test` owns the single
-  production build before the Node/browser suites. It then runs
-  controlled-history, public-safety, and repository-baseline checks.
+  production build before the Node/browser suites and includes pure local
+  repository-settings comparison cases. It then runs controlled-history,
+  public-safety, and repository-baseline checks. The settings cases use only
+  committed local fixtures/configuration and do not call GitHub.
 - `npm run verify:github-settings` is a separate provider/network-aware
   comparison against `config/github-repository-settings.json`. Use authorized
   GitHub API credentials when required to read the repository/rulesets. It does
