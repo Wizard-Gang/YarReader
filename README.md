@@ -38,13 +38,21 @@ The acceptance graph performs one production build: `test` owns it before the
 Node and browser suites, `check` invokes `test` once without rebuilding, and CI
 runs `check` without a separate production-build step.
 
-Before opening a pull request, run:
+Before opening or updating a pull request targeting `main`, run:
 
 ```bash
 npm ci
 npm run check
+git fetch origin main
+git diff --check origin/main...HEAD
 git diff --check
 ```
+
+`npm run check` is the credential-free repository gate after dependencies are
+installed. The triple-dot Git check validates the committed branch change set
+against the fetched target branch/merge base, matching pull-request semantics.
+The final bare `git diff --check` remains useful for uncommitted working-tree
+changes; it is not a substitute for the committed-range check.
 
 Release publication is separate from ordinary development and acceptance. An
 annotated semantic-version tag matching `package.json` triggers the Release
