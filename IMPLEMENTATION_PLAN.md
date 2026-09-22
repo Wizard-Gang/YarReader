@@ -6,16 +6,6 @@ YarReader remains an offline, portable `file://` reader: hosted deployment, a Wo
 
 ## Open tasks
 
-### YR-059 — [TEST] Check committed PR whitespace against its base
-
-- Dependency: YR-058 merged.
-- Why: CI's bare `git diff --check` can miss whitespace already committed on the PR head.
-- Scope: Use the actual PR base/head range in CI with a documented local equivalent; add a small failing fixture/test if practical.
-- Non-goals: No merge-method change.
-- Acceptance: A committed whitespace defect fails exact-head CI; clean changes pass.
-- Validation: Focused whitespace fixture; `npm run check`; `git diff --check`.
-- Authorities: `.github/workflows/ci.yml`, `CONTRIBUTING.md`.
-
 ### YR-060 — [TEST] Test repository-settings comparison without credentials
 
 - Dependency: YR-059 merged.

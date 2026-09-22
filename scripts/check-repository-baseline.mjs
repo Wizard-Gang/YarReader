@@ -1,8 +1,12 @@
-import { readdir, readFile, stat } from "node:fs/promises";
+import { execFile } from "node:child_process";
+import { mkdtemp, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
+const execFileAsync = promisify(execFile);
 const failures = [];
 
 function fail(message) {
@@ -24,6 +28,50 @@ async function exists(relative) {
   } catch (error) {
     if (error?.code === "ENOENT") return false;
     throw error;
+  }
+}
+
+async function runGit(cwd, ...args) {
+  return execFileAsync("git", args, { cwd, encoding: "utf8" });
+}
+
+async function proveCommittedWhitespaceRange() {
+  const fixtureRoot = await mkdtemp(path.join(tmpdir(), "yarreader-whitespace-"));
+  const fixture = path.join(fixtureRoot, "fixture.txt");
+
+  try {
+    await runGit(fixtureRoot, "init", "--quiet");
+    await runGit(fixtureRoot, "config", "user.name", "YarReader baseline");
+    await runGit(fixtureRoot, "config", "user.email", "baseline@example.invalid");
+
+    await writeFile(fixture, "base\n", "utf8");
+    await runGit(fixtureRoot, "add", "fixture.txt");
+    await runGit(fixtureRoot, "commit", "--quiet", "-m", "base");
+    const { stdout: baseStdout } = await runGit(fixtureRoot, "rev-parse", "HEAD");
+    const base = baseStdout.trim();
+
+    await writeFile(fixture, "base\nclean\n", "utf8");
+    await runGit(fixtureRoot, "add", "fixture.txt");
+    await runGit(fixtureRoot, "commit", "--quiet", "-m", "clean");
+    const { stdout: cleanStdout } = await runGit(fixtureRoot, "rev-parse", "HEAD");
+    const cleanHead = cleanStdout.trim();
+    await runGit(fixtureRoot, "diff", "--check", `${base}...${cleanHead}`);
+
+    await writeFile(fixture, "base\nclean\ntrailing   \n", "utf8");
+    await runGit(fixtureRoot, "add", "fixture.txt");
+    await runGit(fixtureRoot, "commit", "--quiet", "-m", "defect");
+    const { stdout: defectStdout } = await runGit(fixtureRoot, "rev-parse", "HEAD");
+    const defectHead = defectStdout.trim();
+
+    let rejected = false;
+    try {
+      await runGit(fixtureRoot, "diff", "--check", `${base}...${defectHead}`);
+    } catch {
+      rejected = true;
+    }
+    expect(rejected, "committed-range whitespace proof must reject a committed trailing-whitespace defect");
+  } finally {
+    await rm(fixtureRoot, { recursive: true, force: true });
   }
 }
 
@@ -181,10 +229,19 @@ expect(!(await exists("docs/history")), "docs/history/** must not return");
 
 expect(ci.includes("pull_request:"), "CI must run for pull requests");
 expect(ci.includes("branches: [main]"), "CI must run for pushes to main");
+expect(ci.includes("fetch-depth: 0"), "CI must fetch full Git history for committed-range validation");
 expect(ci.includes("node-version-file: .node-version"), "CI must use .node-version");
-for (const command of ["npm ci", "npm run check", "git diff --check"]) {
+for (const command of ["npm ci", "npm run check"]) {
   expect(ci.includes(`- run: ${command}`), `CI must run ${command}`);
 }
+expect(ci.includes("name: Check committed whitespace"), "CI must name the committed whitespace gate");
+expect(ci.includes("github.event.pull_request.base.sha"), "PR whitespace validation must use the authoritative pull-request base SHA");
+expect(ci.includes("github.event.pull_request.head.sha"), "PR whitespace validation must use the authoritative pull-request head SHA");
+expect(ci.includes('git diff --check "$PR_BASE_SHA...$PR_HEAD_SHA"'), "PR whitespace validation must check the committed merge-base range");
+expect(ci.includes("github.event.before"), "push whitespace validation must use the pushed before SHA");
+expect(ci.includes("github.sha"), "push whitespace validation must use the pushed head SHA");
+expect(ci.includes('git diff --check "$PUSH_BEFORE_SHA" "$PUSH_HEAD_SHA"'), "push whitespace validation must check the pushed committed range");
+expect(!ci.includes("- run: git diff --check"), "CI must not rely on a bare working-tree-only whitespace command");
 expect(!ci.includes("- run: npm run build"), "CI must not repeat the production build already owned by check -> test");
 expect(ci.includes("Validate pull-request title"), "CI must validate controlled pull-request titles");
 
@@ -249,6 +306,8 @@ for (const marker of [
 expect(exportValidation.includes("assertPortableHtmlSecurity(text, relative)"), "portable export validation must enforce HTML security");
 expect(portableTest.includes("no shipped document or script contains a remote URL"), "portable acceptance must retain remote-URL rejection");
 expect(portableTest.includes("driving the whole reader touches no network entry point"), "portable acceptance must retain runtime no-network coverage");
+
+await proveCommittedWhitespaceRange();
 
 const offlineMarker = "WG-ARCH-001 §27 offline-reader exception";
 expect(architecture.includes(offlineMarker), "ARCHITECTURE.md must declare the permanent §27 offline-reader exception");

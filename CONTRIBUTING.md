@@ -68,13 +68,21 @@ CI runs `check` without a separate production-build step.
 Pipeline and filesystem tests remain on `node:test`; Vitest 5 owns tests that need
 TypeScript browser modules or a DOM. Keep that split when adding or moving tests.
 
-Before opening a pull request, run:
+Before opening or updating a pull request targeting `main`, run:
 
 ```sh
 npm ci
 npm run check
+git fetch origin main
+git diff --check origin/main...HEAD
 git diff --check
 ```
+
+`npm run check` is the credential-free repository gate after dependencies are
+installed. The triple-dot Git check validates the committed branch change set
+against the fetched target branch/merge base, matching pull-request semantics.
+The final bare `git diff --check` remains useful for uncommitted working-tree
+changes; it is not a substitute for the committed-range check.
 
 Browser/presentation changes also preserve the automated Vitest DOM accessibility
 acceptance boundary. The small set of checks that require actual browser or
