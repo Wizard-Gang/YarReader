@@ -52,6 +52,7 @@ documentation and behavior ever disagree.
   cases. It then runs controlled-history, public-safety, and repository-baseline
   checks. The settings and release-identity cases use only committed local
   fixtures/configuration and do not call GitHub.
+- `npm run audit:high` is the explicit registry/network-aware high-severity dependency advisory gate. It is intentionally separate from credential-free `npm run check`. A completed clean audit exits green; a high/critical advisory fails; registry or advisory-service unavailability is reported as unavailable and remains non-green rather than being mistaken for a clean result.
 - `npm run verify:github-settings` is a separate provider/network-aware
   comparison against `config/github-repository-settings.json`. Use authorized
   GitHub API credentials when required to read the repository/rulesets. It does
@@ -77,6 +78,7 @@ Before opening or updating a pull request targeting `main`, run:
 
 ```sh
 npm ci
+npm run audit:high
 npm run check
 git fetch origin main
 git diff --check origin/main...HEAD

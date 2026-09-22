@@ -24,6 +24,8 @@ jobs:
           node-version-file: .node-version
           cache: npm
       - run: npm ci
+      - name: Audit high-severity dependencies
+        run: npm run audit:high
       - run: npm run check
       - name: Check committed whitespace
         env:
