@@ -28,7 +28,7 @@ When the owner says `do needful` (or an equivalent instruction to continue), do 
 2. merge any already-green/current authoritative PR first when merging is possible;
 3. remove task blocks that earlier merges already completed and reconcile resolved findings before selecting new work;
 4. select the first remaining open planned task unless the owner explicitly changes priority; if that first task is blocked, stop there and surface the blocker rather than choosing a later task;
-5. carry that task through branch → implementation → validation → controlled commit → pull request → exact-head CI → merge;
+5. carry that task through branch → implementation → validation → one controlled branch commit → pull request → exact-head CI → squash the exact validated head → one controlled commit on `main` → verify `main` → branch cleanup;
 6. include retirement of the delivered task in that same controlled change, deleting `IMPLEMENTATION_PLAN.md` instead when it is the final open task;
 7. after a successful merge, finish the same turn with a complete copy-paste kickoff prompt for the next open planned task, or with the required fresh-state re-audit prompt when the queue is exhausted.
 
@@ -41,6 +41,8 @@ Start from an up-to-date `main` and keep each controlled change limited to one p
 Branches use `yr-###-imperative-summary`. Commit and pull-request titles use `[YR-###] [TYPE] Imperative summary` with one current WG-ARCH-001 §16 type. New automation work uses `OPS` or `BUILD`.
 
 Controlled commit bodies include `Change`, `Reason`, `Impact`, `Risk`, `Controls`, `Validation`, `Evidence`, `Source`, and `Release`. Add `Rollback` when the change affects persistence, migration, archive, activation, schemas, provider settings, release behavior, or another high-risk boundary.
+
+Controlled pull requests use squash merges only. Do not use merge commits or rebase merges for new controlled changes.
 
 ## Product and safety boundaries
 
