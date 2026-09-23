@@ -7,8 +7,9 @@ When `IMPLEMENTATION_PLAN.md` exists, reconcile it with current `main` before ch
 ## Change flow
 
 ```text
-requirement → permanent YR ID → branch → implementation → pull request → CI
-            → review → merge → release
+permanent YR ID → branch → implementation → validation → one controlled commit
+→ pull request → exact-head CI → squash exact validated head → one controlled
+commit retained on main → verify main → branch cleanup
 ```
 
 Confirm the next permanent ID with `npm run check:history`, then create a branch
@@ -55,8 +56,11 @@ documentation and behavior ever disagree.
 - `npm run audit:high` is the explicit registry/network-aware high-severity dependency advisory gate. It is intentionally separate from credential-free `npm run check`. A completed clean audit exits green; a high/critical advisory fails; registry or advisory-service unavailability is reported as unavailable and remains non-green rather than being mistaken for a clean result.
 - `npm run verify:github-settings` is a separate provider/network-aware
   comparison against `config/github-repository-settings.json`. Use authorized
-  GitHub API credentials when required to read the repository/rulesets. It does
-  not change settings.
+  `GH_ADMIN_TOKEN` or `GH_TOKEN` with Repository Administration read access. It
+  does not change settings.
+- `npm run apply:github-settings` is the explicit settings mutation path. It
+  requires Repository Administration write access through the same token contract,
+  changes only the committed authority, and independently re-reads live settings.
 - Release publication is not part of `check` or ordinary controlled delivery.
   `test:release` exercises the shared release-identity validator entirely in
   disposable local Git repositories. Pushing an annotated semantic tag that

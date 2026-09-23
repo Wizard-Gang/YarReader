@@ -159,6 +159,8 @@ const [
   portableTest,
   githubSettingsPolicy,
   githubSettingsVerifier,
+  githubSettingsProvider,
+  githubSettingsApply,
   githubSettingsTest,
 ] = await Promise.all([
   read("package.json"),
@@ -181,6 +183,8 @@ const [
   read("test/browser/portable-independence.test.ts"),
   read("scripts/github-settings-policy.mjs"),
   read("scripts/verify-github-settings.mjs"),
+  read("scripts/github-settings-provider.mjs"),
+  read("scripts/apply-github-settings.mjs"),
   read("test/github-settings-policy.test.mjs"),
 ]);
 
@@ -218,6 +222,8 @@ const requiredCommands = [
   "audit:high",
   "test:audit-policy",
   "verify:github-settings",
+  "apply:github-settings",
+  "test:github-settings",
 ];
 for (const command of requiredCommands) {
   expect(typeof pkg.scripts?.[command] === "string" && pkg.scripts[command].length > 0, `required command is missing: ${command}`);
@@ -228,6 +234,8 @@ expect(pkg.scripts?.typecheck?.includes("tsc -p tsconfig.json --noEmit"), "typec
 expect(pkg.scripts?.typecheck?.includes("tsconfig.viewer.json"), "typecheck must include the viewer TypeScript program");
 expect(pkg.scripts?.typecheck?.includes("tsconfig.browser-test.json"), "typecheck must include the browser-test/tooling TypeScript program");
 expect(pkg.scripts?.["test:settings"] === "node --test --test-reporter=spec test/github-settings-policy.test.mjs", "test:settings must run the credential-free repository-settings policy cases");
+expect(pkg.scripts?.["test:github-settings"] === "npm run test:settings", "test:github-settings must reuse the pure settings cases");
+expect(pkg.scripts?.["apply:github-settings"] === "node scripts/apply-github-settings.mjs", "apply:github-settings must be the explicit settings mutation command");
 expect(pkg.scripts?.["test:release"] === "node --test --test-reporter=spec test/release-identity.test.mjs", "test:release must run the credential-free release-identity cases");
 expect(pkg.scripts?.["audit:high"] === "node scripts/audit-dependencies.mjs", "audit:high must own the explicit live npm advisory boundary");
 expect(pkg.scripts?.["test:audit-policy"] === "node --test --test-reporter=spec test/dependency-advisory-policy.test.mjs", "test:audit-policy must run deterministic local advisory classification cases");
@@ -241,7 +249,10 @@ expect(!pkg.scripts?.check?.includes("audit:high"), "check must remain offline a
 expect(githubSettingsPolicy.includes("compareGithubRepositorySettings"), "repository-settings policy must expose the pure comparison boundary");
 expect(!githubSettingsPolicy.includes("fetch("), "repository-settings policy comparison must not call the network");
 expect(githubSettingsVerifier.includes('from "./github-settings-policy.mjs"'), "live settings verifier must reuse the pure comparison boundary");
-expect(githubSettingsVerifier.includes("fetch("), "live settings verifier must remain the explicit provider/network boundary");
+expect(githubSettingsVerifier.includes("fetchLiveGithubSettings"), "live settings verifier must use the read-only provider boundary");
+expect(githubSettingsProvider.includes("GH_ADMIN_TOKEN") && githubSettingsProvider.includes("GH_TOKEN"), "settings provider must use the shared admin credential path");
+expect(!githubSettingsProvider.includes("GITHUB_TOKEN"), "settings provider must not introduce another token variable");
+expect(githubSettingsApply.includes("applyGithubSettings"), "settings apply must use the bounded provider mutation path");
 expect(githubSettingsTest.includes("compareGithubRepositorySettings"), "settings tests must exercise the shared pure comparison boundary");
 
 for (const [name, text] of [

@@ -8,6 +8,10 @@ YarReader uses permanent `YR-###` identifiers and controlled commit titles:
 
 Branches use `yr-###-imperative-summary`.
 
+Controlled PRs land through squash-only merges. The exact validated PR head becomes
+one permanent controlled commit on `main`; merge commits and rebase merges are not
+controlled delivery methods. Verify merged-main CI and completed-branch cleanup.
+
 New primary types follow the complete WG-ARCH-001 §16 vocabulary: `INIT`,
 `FEAT`, `FIX`, `SEC`, `API`, `A11Y`, `I18N`, `AI`, `DB`, `OPS`,
 `TEST`, `DOCS`, `REFACTOR`, `PERF`, `BUILD`, `REVERT`, and `CHORE`.
@@ -37,8 +41,9 @@ After the merge succeeds, finish the same turn with a complete copy-paste kickof
 
 Provider-setting changes are isolated controlled work: keep the expected state
 in `config/github-repository-settings.json`, capture live GitHub state before and
-after the change, and run `npm run verify:github-settings` with authorized admin
-credentials.
+after the change. Use `npm run verify:github-settings` for a read-only live check;
+`npm run apply:github-settings` is the only normal settings mutation command and
+independently re-reads provider state after applying committed policy.
 
 Git and GitHub are the authority for superseded repository states, pull requests,
 workflow runs, tags, and Releases. Current-tree Markdown does not maintain a
