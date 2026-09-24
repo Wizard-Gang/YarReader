@@ -36,9 +36,11 @@ const legacyTypes = new Map([["YR-035", "CI"]]);
 const titlePattern = /^\[YR-(\d{3,})\] \[([A-Z0-9]+)\] .+/;
 const requiredSections = ["Change", "Reason", "Impact", "Risk", "Controls", "Validation", "Evidence", "Source", "Release"];
 const seen = new Set();
+const earlyMaintenance = new Set();
+let expectedNumber = 1;
 const failures = [];
 
-records.forEach((record, index) => {
+records.forEach((record) => {
   const [sha = "", subject = "", body = ""] = record.split("\x1f");
   const match = titlePattern.exec(subject);
   if (!match) {
@@ -48,7 +50,10 @@ records.forEach((record, index) => {
 
   const id = `YR-${match[1]}`;
   const type = match[2];
-  const expected = `YR-${String(index + 1).padStart(3, "0")}`;
+  while (earlyMaintenance.has(expectedNumber)) expectedNumber += 1;
+  const maintenance = /^Portfolio-Plan-Maintenance: true$/m.test(body);
+  const number = Number(match[1]);
+  const expected = `YR-${String(expectedNumber).padStart(3, "0")}`;
   const legacyType = legacyTypes.get(id);
 
   if (!currentTypes.has(type) && legacyType !== type) {
@@ -57,7 +62,9 @@ records.forEach((record, index) => {
   if (type === "CI" && legacyType !== "CI") {
     failures.push(`${id} uses legacy type CI; use OPS or BUILD for new automation changes`);
   }
-  if (id !== expected) failures.push(`${sha.slice(0, 12)} uses ${id}; expected ${expected}`);
+  if (maintenance && number > expectedNumber) earlyMaintenance.add(number);
+  else if (id !== expected) failures.push(`${sha.slice(0, 12)} uses ${id}; expected ${expected}`);
+  else expectedNumber += 1;
   if (seen.has(id)) failures.push(`${id} is duplicated`);
   seen.add(id);
 
