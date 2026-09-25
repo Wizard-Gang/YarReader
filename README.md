@@ -23,7 +23,7 @@ yar --workspace /path/to/media update --stable-seconds 0
 ## Command contract
 
 Install the pinned dependency graph first with `npm ci`. The repository pins Node
-26.9.0 in `.node-version` and npm 11.19.1 in `package.json`.
+26.10.0 in `.node-version` and npm 12.1.0 in `package.json`.
 
 | Command | Use it for | Current side effects / prerequisites |
 | --- | --- | --- |
@@ -32,6 +32,7 @@ Install the pinned dependency graph first with `npm ci`. The repository pins Nod
 | `npm test` / `npm run test` | Node and browser test suites | Runs `npm run build` first, so it writes production/compiler output to `dist`, then runs Node tests from `dist/test` and Vitest browser-module/DOM tests. |
 | `npm run build` | Production build output | Compiles the Node/test TypeScript program into `dist` and builds the viewer bundle into `dist/viewer`. It does not run the test suites. |
 | `npm run check` | Credential-free local repository acceptance | Runs non-emitting `typecheck`, then `test` once; `test` owns the single production build before the Node/browser suites. It then runs controlled-history, public-safety, and repository-baseline validation. It does not contact GitHub for live settings. |
+| `npm run security:dependency-advisories` | Query live high-severity dependency advisories | Requires npm registry access; findings and unavailable queries both fail. CI runs it separately from credential-free `check`. |
 | `npm run verify:github-settings` | Compare live GitHub repository/ruleset settings with `config/github-repository-settings.json` | Read-only and separate from `check`; requires `GH_ADMIN_TOKEN` or an authorized `GH_TOKEN` with Repository Administration read access. |
 | `npm run apply:github-settings` | Apply the committed GitHub settings contract | Explicit provider mutation only; requires Repository Administration write access, then independently re-reads and verifies live state. |
 
