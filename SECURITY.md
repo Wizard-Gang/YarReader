@@ -23,7 +23,7 @@ repository, its history, tests, documentation, or release artifacts.
 
 ## Dependency advisories
 
-`npm run audit:high` is the explicit live high-severity dependency-advisory gate. It queries the npm advisory service separately from credential-free `npm run check`: a clean completed audit is green, a high/critical finding fails, and registry/advisory-service unavailability is reported as unavailable and remains non-green. CI runs this named gate after `npm ci` and before the offline repository acceptance gate.
+`npm run security:dependency-advisories` is the explicit live high-severity dependency-advisory gate. It queries the npm advisory service separately from credential-free `npm run check`: a clean completed audit is green, a high/critical finding fails, and registry/advisory-service unavailability is reported as unavailable and remains non-green. CI runs this named gate after `npm ci` and before the offline repository acceptance gate.
 
 ## Supported versions
 
