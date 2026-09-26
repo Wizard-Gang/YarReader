@@ -219,6 +219,7 @@ const requiredCommands = [
   "check:history",
   "check:safety",
   "check:baseline",
+  "audit:dependencies",
   "security:dependency-advisories",
   "test:audit-policy",
   "verify:github-settings",
@@ -237,7 +238,8 @@ expect(pkg.scripts?.["test:settings"] === "node --test --test-reporter=spec test
 expect(pkg.scripts?.["test:github-settings"] === "npm run test:settings", "test:github-settings must reuse the pure settings cases");
 expect(pkg.scripts?.["apply:github-settings"] === "node scripts/apply-github-settings.mjs", "apply:github-settings must be the explicit settings mutation command");
 expect(pkg.scripts?.["test:release"] === "node --test --test-reporter=spec test/release-identity.test.mjs", "test:release must run the credential-free release-identity cases");
-expect(pkg.scripts?.["security:dependency-advisories"] === "node scripts/audit-dependencies.mjs", "security:dependency-advisories must own the explicit live npm advisory boundary");
+expect(pkg.scripts?.["audit:dependencies"] === "node scripts/audit-dependencies.mjs", "audit:dependencies must own the explicit live npm advisory boundary");
+expect(pkg.scripts?.["security:dependency-advisories"] === "npm run audit:dependencies", "security:dependency-advisories must remain a compatibility alias");
 expect(pkg.scripts?.["test:audit-policy"] === "node --test --test-reporter=spec test/dependency-advisory-policy.test.mjs", "test:audit-policy must run deterministic local advisory classification cases");
 expect(pkg.scripts?.test === "npm run build && npm run test:node && npm run test:settings && npm run test:release && npm run test:audit-policy && npm run test:browser", "test must own exactly one production build and run Node, settings, release, audit-policy, and browser suites once");
 expect(pkg.scripts?.check === "npm run typecheck && npm test && npm run check:history && npm run check:safety && npm run check:baseline", "check must invoke the self-contained test command once without a redundant direct build");
@@ -246,6 +248,7 @@ expect(pkg.scripts?.check?.includes("npm run check:safety"), "check must include
 expect(pkg.scripts?.check?.includes("npm run check:baseline"), "check must include repository-baseline validation");
 expect(!pkg.scripts?.check?.includes("verify:github-settings"), "check must remain credential-free and must not invoke the live GitHub settings verifier");
 expect(!pkg.scripts?.check?.includes("security:dependency-advisories"), "check must remain offline and must not invoke the live dependency-advisory gate");
+expect(!pkg.scripts?.check?.includes("audit:dependencies"), "check must not invoke the live dependency audit");
 expect(githubSettingsPolicy.includes("compareGithubRepositorySettings"), "repository-settings policy must expose the pure comparison boundary");
 expect(!githubSettingsPolicy.includes("fetch("), "repository-settings policy comparison must not call the network");
 expect(githubSettingsVerifier.includes('from "./github-settings-policy.mjs"'), "live settings verifier must reuse the pure comparison boundary");
@@ -271,13 +274,19 @@ expect(!(await exists("docs/history")), "docs/history/** must not return");
 expect(ci.includes("pull_request:"), "CI must run for pull requests");
 expect(ci.includes("branches: [main]"), "CI must run for pushes to main");
 expect(ci.includes("fetch-depth: 0"), "CI must fetch full Git history for committed-range validation");
+expect(ci.includes("ref: ${{ github.event.pull_request.head.sha || github.sha }}"), "CI verify must check out the exact PR head or accepted main commit");
 expect(ci.includes("node-version-file: .node-version"), "CI must use .node-version");
+for (const [workflowName, workflow] of [["CI", ci], ["release", release]]) {
+  for (const action of ["checkout", "setup-node"]) {
+    expect(new RegExp(`actions/${action}@[0-9a-f]{40}`).test(workflow), `${workflowName} ${action} action must be pinned to a full commit SHA`);
+  }
+}
 for (const command of ["npm ci", "npm run check"]) {
   expect(ci.includes(`- run: ${command}`), `CI must run ${command}`);
 }
 expect(ci.includes("name: Audit high-severity dependencies"), "CI must name the live dependency-advisory gate");
-expect(ci.includes("run: npm run security:dependency-advisories"), "CI must run the explicit high-severity dependency audit");
-expect(ci.indexOf("run: npm run security:dependency-advisories") < ci.indexOf("- run: npm run check"), "CI must run the live dependency audit before credential-free check");
+expect(ci.includes("run: npm run audit:dependencies"), "CI must run the explicit high-severity dependency audit");
+expect(ci.indexOf("run: npm run audit:dependencies") < ci.indexOf("- run: npm run check"), "CI must run the live dependency audit before credential-free check");
 expect(ci.includes("name: Check committed whitespace"), "CI must name the committed whitespace gate");
 expect(ci.includes("github.event.pull_request.base.sha"), "PR whitespace validation must use the authoritative pull-request base SHA");
 expect(ci.includes("github.event.pull_request.head.sha"), "PR whitespace validation must use the authoritative pull-request head SHA");

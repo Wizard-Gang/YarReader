@@ -18,13 +18,6 @@ For each task, validate with the pinned toolchain, `npm ci`, focused cases, `npm
 
 ## Open tasks
 
-### YR-067 — [OPS] Finish exact-head CI and common command convergence
-
-- Dependency: YR-066 delivered and the Node `26.10.0`/npm `12.1.0` package cohort is already on `main`. The existing bounded public-history secret scan remains authoritative.
-- Scope: Make the required `verify` PR workflow explicitly check out the exact PR head with full history; preserve `change-id` and merged-main checks. Pin applicable official actions to reviewed full SHAs. Expose the shared `audit:dependencies` entry point while retaining the existing advisory command as an alias if callers use it. Recheck package/lockfile parity with sibling repositories without gratuitous version churn.
-- Acceptance: CI and local cases prove that PR validation runs on the exact reported head, `npm run check` stays credential-free, the advisory alias remains network-only, and existing settings/security/release boundaries are unchanged.
-- Validation: `npm ci`, focused workflow/advisory/settings cases, `npm run check`, `git diff --check`, exact-head `verify` and `change-id`, then merged-main CI. Delete this plan in the delivering change if no later task remains.
-
 ### YR-069 — [OPS] Converge common agent instructions and permanent empty plan queue
 
 - Dependency: YR-067 delivered; preserve every existing queued task and its order. The baseline seed remains downstream of this repository convergence.
