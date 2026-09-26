@@ -242,7 +242,7 @@ expect(pkg.scripts?.["audit:dependencies"] === "node scripts/audit-dependencies.
 expect(pkg.scripts?.["security:dependency-advisories"] === "npm run audit:dependencies", "security:dependency-advisories must remain a compatibility alias");
 expect(pkg.scripts?.["test:audit-policy"] === "node --test --test-reporter=spec test/dependency-advisory-policy.test.mjs", "test:audit-policy must run deterministic local advisory classification cases");
 expect(pkg.scripts?.test === "npm run build && npm run test:node && npm run test:settings && npm run test:release && npm run test:audit-policy && npm run test:browser", "test must own exactly one production build and run Node, settings, release, audit-policy, and browser suites once");
-expect(pkg.scripts?.check === "npm run typecheck && npm test && npm run check:history && npm run check:safety && npm run check:baseline", "check must invoke the self-contained test command once without a redundant direct build");
+expect(pkg.scripts?.check === "npm run test:plan-queue && npm run typecheck && npm test && npm run check:history && npm run check:safety && npm run check:baseline", "check must invoke the self-contained test command once without a redundant direct build");
 expect(pkg.scripts?.check?.includes("npm run check:history"), "check must include controlled-history validation");
 expect(pkg.scripts?.check?.includes("npm run check:safety"), "check must include public-safety validation");
 expect(pkg.scripts?.check?.includes("npm run check:baseline"), "check must include repository-baseline validation");
