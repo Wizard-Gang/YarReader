@@ -3,11 +3,9 @@ import { execFileSync } from "node:child_process";
 /*
  * Enumerate only controlled commits, parents before children.
  *
- * `main` is merged with merge commits, so history now contains merge commits
- * that are not themselves controlled changes: the pull-request merge on `main`
- * and the synthetic merge a pull-request CI checkout creates. `--no-merges`
- * drops both, and `--topo-order` keeps the remaining controlled commits in
- * their real sequence rather than in commit-timestamp order.
+ * `--no-merges` ignores legacy merge commits and any synthetic pull-request CI
+ * merge checkout. Current controlled PRs land as one squash commit on `main`.
+ * `--topo-order` keeps controlled commits in their real ancestry sequence.
  */
 const raw = execFileSync("git", ["log", "--reverse", "--topo-order", "--no-merges", "--format=%H%x1f%s%x1f%b%x1e"], { encoding: "utf8" });
 const records = raw.split("\x1e").map((record) => record.trim()).filter(Boolean);

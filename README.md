@@ -66,6 +66,12 @@ YarReader has no hosted production deployment, Worker, or production-environment
 lifecycle. The released product remains the local/offline CLI plus portable static
 reader that opens through `file://`.
 
+## YarReader-specific controlled work
+
+Use `YR-###` permanent IDs, `yr-###-imperative-summary` branches, and `[YR-###] [TYPE] Imperative summary` commit and pull-request titles. The required exact-head checks are `verify` and `change-id`. [Change management](docs/CHANGE-MANAGEMENT.md) defines the body, risk, evidence, and queue rules; [architecture](ARCHITECTURE.md) owns filesystem, catalog, archive, normalization, and export invariants.
+
+YarReader is local and offline. The activated reader remains a self-contained directory that can be copied elsewhere and opened through `file://`; static HTML and page images stay usable without JavaScript. Do not add a hosted service, Cloudflare Worker, production selector, deployment path, or runtime network requirement without an explicit architecture change. Do not commit runtime media, real catalogs, generated exports, downloaded covers, private URLs or keys, machine-specific paths, device identifiers, or real series-curation inventories. Keep tests isolated from real media and workspace state.
+
 ## Structure
 
 - `src/` contains the CLI, adapters, catalog, archive, and export pipeline.
