@@ -22,6 +22,7 @@ function matchingActual() {
       allow_merge_commit: expected.mergeMethods.mergeCommit,
       allow_squash_merge: expected.mergeMethods.squash,
       allow_rebase_merge: expected.mergeMethods.rebase,
+      allow_auto_merge: expected.allowAutoMerge,
       delete_branch_on_merge: expected.deleteBranchOnMerge,
     },
     rulesets: Object.values(expected.rulesets).map((policy, index) => ({ id: index + 1, ...rulesetPayload(expected, policy) })),
@@ -55,6 +56,7 @@ test("repository merge and cleanup drift fails", () => {
   assert.match(failuresFor((actual) => { actual.repository.allow_squash_merge = false; }), /squash merges/);
   assert.match(failuresFor((actual) => { actual.repository.allow_merge_commit = true; }), /merge commits/);
   assert.match(failuresFor((actual) => { actual.repository.allow_rebase_merge = true; }), /rebase merges/);
+  assert.match(failuresFor((actual) => { actual.repository.allow_auto_merge = false; }), /auto-merge availability/);
   assert.match(failuresFor((actual) => { actual.repository.delete_branch_on_merge = false; }), /delete branch on merge/);
 });
 

@@ -70,6 +70,7 @@ export function compareGithubRepositorySettings(expected, repository, rulesets) 
   requireEqual(repository.allow_merge_commit, expected.mergeMethods.mergeCommit, "merge commits", failures);
   requireEqual(repository.allow_squash_merge, expected.mergeMethods.squash, "squash merges", failures);
   requireEqual(repository.allow_rebase_merge, expected.mergeMethods.rebase, "rebase merges", failures);
+  requireEqual(repository.allow_auto_merge, expected.allowAutoMerge, "auto-merge availability", failures);
   requireEqual(repository.delete_branch_on_merge, expected.deleteBranchOnMerge, "delete branch on merge", failures);
 
   for (const [key, policy] of Object.entries(expected.rulesets)) {
