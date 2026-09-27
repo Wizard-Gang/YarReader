@@ -96,3 +96,7 @@ not by a parallel current-tree history archive.
 YarReader has no hosted production deployment. `yar update` activates a verified
 static library generation, and `yar portable /path/to/destination` copies it into
 a self-contained directory for offline use through `file://`.
+
+## GitHub auto-merge
+
+The committed repository settings enable per-PR auto-merge. Enabling this repository capability does not enroll a PR: an authorized contributor chooses auto-merge for that PR. GitHub then waits for required reviews and exact-head checks and uses the repository's squash-only merge policy. Run `npm run verify:github-settings` for a read-only live check; `npm run apply:github-settings` applies the committed authority and independently verifies it.
