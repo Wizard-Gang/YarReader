@@ -56,10 +56,11 @@ against the fetched target branch/merge base, matching pull-request semantics.
 The final bare `git diff --check` remains useful for uncommitted working-tree
 changes; it is not a substitute for the committed-range check.
 
-Release publication is separate from ordinary development and acceptance. An
-annotated semantic-version tag matching `package.json` triggers the Release
-workflow, which verifies the exact tag state and creates the GitHub Release.
-Preparing a version string does not publish a release; see
+Release publication follows successful CI on exact current `main`. Release Cutter
+creates or verifies the annotated semantic-version tag matching `package.json`
+and explicitly dispatches Release, which verifies the exact tag state and creates
+the GitHub Release. A version already represented by an immutable Release does
+not publish again; see
 [Release management](docs/RELEASE-MANAGEMENT.md).
 
 YarReader has no hosted production deployment, Worker, or production-environment

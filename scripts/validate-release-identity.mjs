@@ -20,6 +20,8 @@ export async function validateReleaseIdentity({
   tag,
   repoRoot = process.cwd(),
   packagePath = "package.json",
+  expectedSha,
+  mainRef,
 } = {}) {
   if (!isSemanticReleaseTag(tag)) {
     throw new Error(`Release tag must be semantic and start with v: ${tag ?? ""}`);
@@ -41,6 +43,16 @@ export async function validateReleaseIdentity({
   if (checkedOutCommit !== taggedCommit) {
     throw new Error(`Checkout is not the commit identified by ${tag}`);
   }
+  if (expectedSha && taggedCommit !== expectedSha) {
+    throw new Error(`Tag ${tag} does not identify expected commit ${expectedSha}`);
+  }
+  if (mainRef) {
+    try {
+      await git(repoRoot, "merge-base", "--is-ancestor", taggedCommit, mainRef);
+    } catch {
+      throw new Error(`Tag ${tag} is not in accepted main ancestry`);
+    }
+  }
 
   const packageFile = path.resolve(repoRoot, packagePath);
   const pkg = JSON.parse(await readFile(packageFile, "utf8"));
@@ -54,7 +66,7 @@ export async function validateReleaseIdentity({
 const invokedAsCli = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (invokedAsCli) {
   try {
-    const result = await validateReleaseIdentity({ tag: process.argv[2] });
+    const result = await validateReleaseIdentity({ tag: process.argv[2], expectedSha: process.argv[3], mainRef: process.argv[4] });
     process.stdout.write(`Release identity valid for ${result.tag} at ${result.checkedOutCommit}.\n`);
   } catch (error) {
     process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
