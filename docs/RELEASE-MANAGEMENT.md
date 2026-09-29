@@ -10,9 +10,20 @@ reader that opens from `file://`.
 
 ## Release procedure
 
-1. Merge the release-preparation change to `main` and confirm required CI is
-   green.
-2. From a clean checkout of that exact `main` commit, run:
+1. Merge a controlled change with an intended semantic version in `package.json`
+   to `main`. After CI passes on the exact current `main` commit, Release Cutter
+   creates or verifies its annotated `v<package-version>` tag. A stale CI run
+   does not cut a tag. An existing version tag remains at its original accepted
+   main commit; later same-version merges do not move it.
+2. Release Cutter explicitly dispatches `Release` with the tag and accepted
+   commit. GitHub does not trigger a second workflow from a tag pushed with the
+   workflow token. The Release workflow checks out that tag, proves its
+   annotation, version, exact commit, and accepted-main ancestry, then runs
+   `npm ci` and `npm run check` before publishing the GitHub Release.
+3. Verify the Release workflow, tag object, and published GitHub Release.
+
+For a manual recovery or investigation, use a clean checkout of the exact tag
+and run:
 
    ```sh
    npm ci
@@ -21,15 +32,10 @@ reader that opens from `file://`.
    git diff --check
    ```
 
-3. Confirm `package.json` contains the intended semantic version.
-4. Create an annotated `v<package-version>` tag on that exact commit and push
-   the tag. Never move or replace a published tag.
-5. The `Release` workflow checks out and fetches the exact pushed tag, then
-   invokes `scripts/validate-release-identity.mjs` to prove locally that the tag
-   is semantic and annotated, resolves to the checked-out commit, and matches
-   `package.json`. It then runs `npm ci` and `npm run check` and creates the
-   GitHub Release with notes generated from Git/GitHub state.
-6. Verify the Release workflow and resulting GitHub Release.
+The `Release` workflow also accepts an intentional tag push, and a dispatch
+with the existing tag and expected commit can recover an interrupted cutter.
+Neither route changes an existing tag. The current `1.1.0` package version is
+the first eligible chat-driven release after this change reaches validated main.
 
 Published tags and GitHub Releases are immutable. Corrections move forward
 through a new controlled change and a new semantic version/tag.

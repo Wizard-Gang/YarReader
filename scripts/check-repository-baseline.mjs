@@ -118,6 +118,7 @@ const requiredFiles = [
   "vitest.config.ts",
   ".github/workflows/ci.yml",
   ".github/workflows/release.yml",
+  ".github/workflows/release-cutter.yml",
   "scripts/validate-release-identity.mjs",
   "test/release-identity.test.mjs",
   "scripts/dependency-advisory-policy.mjs",
@@ -148,6 +149,7 @@ const [
   architecture,
   ci,
   release,
+  releaseCutter,
   releaseIdentityValidator,
   releaseIdentityTest,
   viteConfig,
@@ -172,6 +174,7 @@ const [
   read("ARCHITECTURE.md"),
   read(".github/workflows/ci.yml"),
   read(".github/workflows/release.yml"),
+  read(".github/workflows/release-cutter.yml"),
   read("scripts/validate-release-identity.mjs"),
   read("test/release-identity.test.mjs"),
   read("vite.viewer.config.ts"),
@@ -299,8 +302,12 @@ expect(!ci.includes("- run: npm run build"), "CI must not repeat the production 
 expect(ci.includes("Validate pull-request title"), "CI must validate controlled pull-request titles");
 
 expect(release.includes("tags: ['v*']"), "release workflow must be tag-driven");
+expect(release.includes("workflow_dispatch:"), "release workflow must allow explicit cutter dispatch");
 expect(release.includes('git fetch --force --no-tags origin "$tag_ref:$tag_ref"'), "release workflow must fetch the exact pushed tag ref before local identity validation");
-expect(release.includes('node scripts/validate-release-identity.mjs "$GITHUB_REF_NAME"'), "release workflow must delegate tag identity validation to the shared local authority");
+expect(release.includes('node scripts/validate-release-identity.mjs "$RELEASE_TAG" "$EXPECTED_SHA" refs/remotes/origin/main'), "release workflow must delegate exact identity validation to the shared local authority");
+expect(releaseCutter.includes("workflow_run:"), "release cutter must follow main CI");
+expect(releaseCutter.includes('git tag -a "$tag" "$VALIDATED_SHA"'), "release cutter must create annotated exact-head tags");
+expect(releaseCutter.includes('gh workflow run release.yml --ref main -f tag="$RELEASE_TAG" -f expected_sha="$EXPECTED_SHA"'), "release cutter must explicitly dispatch exact-tag Release");
 expect(!release.includes("git cat-file -t"), "release workflow must not duplicate annotated-tag validation outside the shared authority");
 expect(!release.includes("package_version="), "release workflow must not duplicate package-version validation outside the shared authority");
 expect(releaseIdentityValidator.includes("validateReleaseIdentity"), "release identity validator must expose the shared validation boundary");
@@ -314,6 +321,7 @@ expect(release.includes("npm run check"), "release workflow must run the reposit
 expect(release.includes("--generate-notes"), "GitHub Releases must use GitHub-generated notes");
 expect(release.includes("--verify-tag"), "GitHub Release publication must verify the pushed tag");
 expect(!/\bwrangler\b|cloudflare\/wrangler-action|\bdeploy(?:ment)?\b/i.test(release), "release workflow must not contain a hosted deployment stage");
+expect(!/\bwrangler\b|cloudflare\/wrangler-action|\bdeploy(?:ment)?\b/i.test(releaseCutter), "release cutter must not contain a hosted deployment stage");
 
 expect(viteConfig.includes('manifest: "manifest.json"'), "Vite must emit the viewer manifest");
 expect(viteConfig.includes('entryFileNames: "assets/viewer-[hash].js"'), "Vite JavaScript must be content hashed");

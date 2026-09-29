@@ -18,7 +18,7 @@ async function git(repoRoot, ...args) {
 async function withRepository(packageVersion, callback) {
   const repoRoot = await mkdtemp(path.join(os.tmpdir(), "yarreader-release-identity-"));
   try {
-    await git(repoRoot, "init", "--quiet");
+    await git(repoRoot, "init", "--quiet", "--initial-branch=main");
     await git(repoRoot, "config", "user.name", "YarReader release test");
     await git(repoRoot, "config", "user.email", "release-test@example.invalid");
     await writeFile(path.join(repoRoot, "package.json"), `${JSON.stringify({ version: packageVersion }, null, 2)}\n`, "utf8");
@@ -94,10 +94,47 @@ test("valid exact annotated tag and package version pass", async () => {
   });
 });
 
+test("dispatch rejects a tag at another commit or outside accepted main", async () => {
+  await withRepository("1.1.0", async (repoRoot) => {
+    await annotate(repoRoot, "v1.1.0");
+    const expectedCommit = await git(repoRoot, "rev-parse", "HEAD");
+    await assert.rejects(
+      validateReleaseIdentity({ tag: "v1.1.0", repoRoot, expectedSha: "0".repeat(40), mainRef: "main" }),
+      /does not identify expected commit/,
+    );
+    await writeFile(path.join(repoRoot, "next.txt"), "next\n", "utf8");
+    await git(repoRoot, "add", "next.txt");
+    await git(repoRoot, "commit", "--quiet", "-m", "next");
+    await git(repoRoot, "checkout", "--quiet", expectedCommit);
+    await validateReleaseIdentity({ tag: "v1.1.0", repoRoot, expectedSha: expectedCommit, mainRef: "main" });
+    await git(repoRoot, "checkout", "--quiet", "--orphan", "other");
+    await git(repoRoot, "rm", "--quiet", "-rf", ".");
+    await writeFile(path.join(repoRoot, "package.json"), '{"version":"1.1.0"}\n', "utf8");
+    await git(repoRoot, "add", "package.json");
+    await git(repoRoot, "commit", "--quiet", "-m", "other");
+    await git(repoRoot, "branch", "-f", "main");
+    await git(repoRoot, "checkout", "--quiet", expectedCommit);
+    await assert.rejects(
+      validateReleaseIdentity({ tag: "v1.1.0", repoRoot, expectedSha: expectedCommit, mainRef: "main" }),
+      /not in accepted main ancestry/,
+    );
+  });
+});
+
 test("Release workflow delegates local identity validation to the tested authority", async () => {
   const workflow = await readFile(new URL("../.github/workflows/release.yml", import.meta.url), "utf8");
-  assert.match(workflow, /node scripts\/validate-release-identity\.mjs "\$GITHUB_REF_NAME"/);
-  assert.match(workflow, /gh release create "\$GITHUB_REF_NAME" --title "\$GITHUB_REF_NAME" --generate-notes --verify-tag/);
+  assert.match(workflow, /workflow_dispatch:/);
+  assert.match(workflow, /node scripts\/validate-release-identity\.mjs "\$RELEASE_TAG" "\$EXPECTED_SHA" refs\/remotes\/origin\/main/);
+  assert.match(workflow, /gh release create "\$RELEASE_TAG" --title "\$RELEASE_TAG" --generate-notes --verify-tag/);
   assert.doesNotMatch(workflow, /git cat-file -t/);
   assert.doesNotMatch(workflow, /package_version=/);
+});
+
+test("main CI cuts an annotated tag and explicitly dispatches the exact Release", async () => {
+  const cutter = await readFile(new URL("../.github/workflows/release-cutter.yml", import.meta.url), "utf8");
+  assert.match(cutter, /workflow_run:/);
+  assert.match(cutter, /github\.event\.workflow_run\.event == 'push'/);
+  assert.match(cutter, /git rev-parse origin\/main/);
+  assert.match(cutter, /git tag -a "\$tag" "\$VALIDATED_SHA"/);
+  assert.match(cutter, /gh workflow run release\.yml --ref main -f tag="\$RELEASE_TAG" -f expected_sha="\$EXPECTED_SHA"/);
 });

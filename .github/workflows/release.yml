@@ -3,6 +3,16 @@ name: Release
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing annotated semantic release tag
+        required: true
+        type: string
+      expected_sha:
+        description: Accepted main commit validated by Release Cutter
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -10,10 +20,14 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+      EXPECTED_SHA: ${{ inputs.expected_sha }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          ref: ${{ github.ref }}
+          ref: ${{ inputs.tag || github.ref }}
           fetch-depth: 0
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
@@ -24,10 +38,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          tag_ref="refs/tags/$GITHUB_REF_NAME"
+          tag_ref="refs/tags/$RELEASE_TAG"
           git fetch --force --no-tags origin "$tag_ref:$tag_ref"
+          git fetch origin main:refs/remotes/origin/main
       - name: Validate exact semantic annotated tag
-        run: node scripts/validate-release-identity.mjs "$GITHUB_REF_NAME"
+        run: node scripts/validate-release-identity.mjs "$RELEASE_TAG" "$EXPECTED_SHA" refs/remotes/origin/main
       - name: Install exact dependencies
         run: npm ci
       - name: Verify tagged state
@@ -35,4 +50,14 @@ jobs:
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes --verify-tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$RELEASE_TAG" --json isDraft --jq '.isDraft' > "$RUNNER_TEMP/release-draft" 2>/dev/null; then
+            [ "$(cat "$RUNNER_TEMP/release-draft")" = false ] || { echo "::error::existing release is a draft"; exit 1; }
+            echo "Published $RELEASE_TAG already exists."
+          else
+            gh release create "$RELEASE_TAG" --title "$RELEASE_TAG" --generate-notes --verify-tag
+          fi
+          [ "$(gh release view "$RELEASE_TAG" --json tagName --jq '.tagName')" = "$RELEASE_TAG" ]
+          [ "$(gh release view "$RELEASE_TAG" --json isDraft --jq '.isDraft')" = false ]
